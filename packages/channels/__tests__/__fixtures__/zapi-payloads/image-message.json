@@ -1,0 +1,10 @@
+{
+  "phone": "5511999998888",
+  "messageId": "ABCD1234567891",
+  "image": {
+    "imageUrl": "https://example.com/image.jpg",
+    "caption": "Olha este produto"
+  },
+  "momment": "2026-02-15T10:31:00.000Z",
+  "isGroup": false
+}

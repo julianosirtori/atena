@@ -1,0 +1,11 @@
+{
+  "name": "@atena/panel",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "echo 'Panel not yet implemented — planned for future sprint'",
+    "build": "echo 'Panel not yet implemented'",
+    "typecheck": "echo 'Panel not yet implemented'"
+  }
+}

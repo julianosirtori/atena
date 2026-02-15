@@ -1,0 +1,7 @@
+{
+  "phone": "5511999998888",
+  "messageId": "ABCD1234567892",
+  "audio": { "audioUrl": "https://example.com/audio.ogg" },
+  "momment": "2026-02-15T10:32:00.000Z",
+  "isGroup": false
+}

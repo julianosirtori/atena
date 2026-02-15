@@ -1,0 +1,34 @@
+{
+  "name": "atena",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SaaS platform for lead automation with AI-powered WhatsApp and Instagram messaging",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "npm@11.6.2",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "test:unit": "turbo test:unit",
+    "typecheck": "turbo typecheck",
+    "lint": "turbo lint",
+    "format": "prettier --write \"packages/*/src/**/*.ts\" \"apps/*/src/**/*.ts\" \"apps/*/__tests__/**/*.ts\" \"packages/*/__tests__/**/*.ts\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.ts\" \"apps/*/src/**/*.ts\" \"apps/*/__tests__/**/*.ts\" \"packages/*/__tests__/**/*.ts\"",
+    "db:generate": "npm run db:generate --workspace=@atena/database",
+    "db:migrate": "npm run db:migrate --workspace=@atena/database",
+    "db:seed": "npm run db:seed --workspace=@atena/database",
+    "db:studio": "npm run db:studio --workspace=@atena/database"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.7.0"
+  }
+}
