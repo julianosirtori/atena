@@ -192,9 +192,11 @@ Channels (WhatsApp/Instagram) → Fastify Webhooks → BullMQ Queue → AI Worke
 - **AI responds even on handoff** — always answer the lead's question before transitioning.
 - **Context-aware validation:** blocking rules consider tenant's business (e.g., churches can mention "God", clinics can use medical terms).
 
-## Conventions
+## Git Conventions
 
-- Conventional commits: `feat(api): ...`, `fix(ai): ...`, `test(scoring): ...`
+- **Commit messages must be in English**
+- **Do NOT include `Co-Authored-By` trailers in commits**
+- Conventional commits (semantic): `feat(api): ...`, `fix(ai): ...`, `test(scoring): ...`
 - Drizzle schema in `packages/database/src/schema.ts` is the source of truth for the data model
 - All IDs are UUID v4, all timestamps are TIMESTAMPTZ
 - Env validation with Zod in `packages/config/src/env.ts` — lazy proxy, throws on invalid
