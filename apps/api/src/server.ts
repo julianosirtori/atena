@@ -4,6 +4,8 @@ import rateLimit from '@fastify/rate-limit'
 import { env } from '@atena/config'
 import { healthRoute } from './routes/health.js'
 import { whatsappWebhookRoute } from './routes/webhooks/whatsapp.js'
+import { v1Routes } from './routes/api/v1/index.js'
+import { registerErrorHandler } from './lib/errors.js'
 
 export async function buildServer() {
   const server = Fastify({
@@ -31,8 +33,11 @@ export async function buildServer() {
     timeWindow: '1 minute',
   })
 
+  registerErrorHandler(server)
+
   await server.register(healthRoute)
   await server.register(whatsappWebhookRoute)
+  await server.register(v1Routes, { prefix: '/api/v1' })
 
   return server
 }
