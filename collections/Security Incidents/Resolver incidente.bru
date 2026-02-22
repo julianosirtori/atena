@@ -1,0 +1,22 @@
+meta {
+  name: Resolver incidente
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/security-incidents/{{incidentId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "resolvedBy": "{{agentId}}"
+  }
+}
+
+docs {
+  Marca um incidente de segurança como resolvido.
+  Campo obrigatório: resolvedBy (UUID do agente que resolveu).
+}

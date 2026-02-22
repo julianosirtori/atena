@@ -1,0 +1,16 @@
+meta {
+  name: Listar agents
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents
+  body: none
+  auth: none
+}
+
+docs {
+  Lista todos os agentes do tenant.
+  Retorna nome, email, role, status online, capacidade e conversas ativas.
+}

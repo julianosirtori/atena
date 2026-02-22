@@ -1,0 +1,16 @@
+meta {
+  name: Listar notes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/notes
+  body: none
+  auth: none
+}
+
+docs {
+  Lista todas as notas de uma conversa.
+  Notas são anotações internas dos agentes sobre a conversa.
+}

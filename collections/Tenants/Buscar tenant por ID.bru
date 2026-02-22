@@ -1,0 +1,16 @@
+meta {
+  name: Buscar tenant por ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retorna todos os dados de um tenant específico, incluindo
+  configurações de negócio, canais, handoff rules e limites do plano.
+}

@@ -1,0 +1,24 @@
+meta {
+  name: Criar note
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/notes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "agentId": "{{agentId}}",
+    "content": "Lead demonstrou interesse em garantia estendida. Acompanhar."
+  }
+}
+
+docs {
+  Cria uma nota interna na conversa.
+  Campos obrigatórios: agentId (UUID do agente), content (texto da nota).
+  Retorna 201 com a nota criada.
+}

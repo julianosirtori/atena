@@ -1,0 +1,26 @@
+meta {
+  name: Listar conversations
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations?page=1&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~status: ai
+  ~channel: whatsapp
+}
+
+docs {
+  Lista conversas do tenant com paginação e filtros opcionais.
+  Filtros: status (ai|waiting_human|human|closed),
+  channel (whatsapp|instagram).
+  Inclui dados do lead (nome, telefone, score, stage).
+  Retorna { data: [...], meta: { total, page, limit, totalPages } }.
+}

@@ -1,0 +1,28 @@
+meta {
+  name: Atualizar tenant
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "businessName": "Loja Demo Eletrônicos",
+    "businessHours": "Segunda a sexta: 9h às 18h. Sábado: 9h às 14h.",
+    "customInstructions": "Sempre oferecer frete grátis acima de R$ 299."
+  }
+}
+
+docs {
+  Atualiza campos do tenant. Todos os campos são opcionais.
+  Campos disponíveis: name, businessName, businessDescription,
+  productsInfo, pricingInfo, faq, businessHours, paymentMethods,
+  customInstructions, plan, leadsLimit, agentsLimit,
+  whatsappProvider, whatsappConfig, instagramConfig,
+  telegramBotConfig, handoffRules.
+}

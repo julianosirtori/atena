@@ -1,0 +1,26 @@
+meta {
+  name: Atualizar lead
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/leads/{{leadId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Maria Santos",
+    "stage": "converted",
+    "tags": ["interessada", "iphone", "convertida"]
+  }
+}
+
+docs {
+  Atualiza dados de um lead. Todos os campos são opcionais.
+  Campos disponíveis: name, email, stage
+  (new|qualifying|hot|human|converted|lost),
+  tags (array de strings), assignedTo (UUID ou null).
+}

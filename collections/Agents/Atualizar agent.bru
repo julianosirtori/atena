@@ -1,0 +1,25 @@
+meta {
+  name: Atualizar agent
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents/{{agentId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Carlos Silva",
+    "isActive": true,
+    "maxConcurrent": 15
+  }
+}
+
+docs {
+  Atualiza dados de um agente. Todos os campos são opcionais.
+  Campos disponíveis: name, email, role, isActive,
+  telegramChatId, maxConcurrent, notificationPreferences.
+}

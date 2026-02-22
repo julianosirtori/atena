@@ -1,0 +1,35 @@
+meta {
+  name: Criar agent
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Novo Agente",
+    "email": "novo@lojademo.com.br",
+    "password": "senha123",
+    "role": "agent",
+    "maxConcurrent": 10,
+    "notificationPreferences": {
+      "telegram": true,
+      "web_push": true,
+      "sound": true
+    }
+  }
+}
+
+docs {
+  Cria um novo agente para o tenant.
+  Campos obrigatórios: name, email, password.
+  Campos opcionais: role (admin|agent, default: agent),
+  telegramChatId, maxConcurrent (1-50, default: 10),
+  notificationPreferences.
+  Retorna 201 com o agente criado.
+}

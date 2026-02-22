@@ -1,0 +1,16 @@
+meta {
+  name: Deletar agent
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents/{{agentId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Remove um agente do tenant.
+  Retorna 204 No Content.
+}

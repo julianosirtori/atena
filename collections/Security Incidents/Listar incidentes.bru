@@ -1,0 +1,28 @@
+meta {
+  name: Listar incidentes
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/security-incidents?page=1&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~severity: high
+  ~resolved: false
+  ~incidentType: injection_attempt
+}
+
+docs {
+  Lista incidentes de segurança do tenant com paginação e filtros.
+  Filtros: severity (low|medium|high|critical),
+  resolved (true|false),
+  incidentType (injection_attempt|prompt_leak|off_topic|
+  over_promise|validation_failed|identity_leak).
+  Retorna { data: [...], meta: { total, page, limit, totalPages } }.
+}

@@ -1,0 +1,15 @@
+meta {
+  name: Buscar lead por ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/leads/{{leadId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retorna todos os dados de um lead específico.
+}

@@ -1,0 +1,18 @@
+meta {
+  name: Métricas do dashboard
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/dashboard
+  body: none
+  auth: none
+}
+
+docs {
+  Retorna métricas agregadas para o dashboard do tenant.
+  Inclui: leadsToday, leadsMonth, leadsLimit, avgScore,
+  handoffRate (%), conversationsByStatus (ai, waiting_human,
+  human, closed) e topIntents (array com intent e count).
+}

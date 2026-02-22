@@ -1,0 +1,16 @@
+meta {
+  name: Contagem mensal de leads
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/billing/monthly-counts
+  body: none
+  auth: none
+}
+
+docs {
+  Retorna a contagem mensal de leads para faturamento.
+  Cada registro contém yearMonth (YYYY-MM) e leadCount.
+}

@@ -1,0 +1,23 @@
+meta {
+  name: Listar messages
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/messages?limit=50
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+  ~cursor:
+}
+
+docs {
+  Lista mensagens de uma conversa com paginação por cursor.
+  Mensagens retornadas em ordem cronológica (mais antiga primeiro).
+  Use o campo nextCursor do meta para buscar a próxima página.
+  Params: limit (1-100, default: 50), cursor (UUID da última mensagem).
+}

@@ -1,0 +1,30 @@
+meta {
+  name: Listar leads
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/leads?page=1&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~stage: hot
+  ~channel: whatsapp
+  ~search: Maria
+  ~minScore: 50
+  ~maxScore: 100
+  ~tags: interessada,iphone
+}
+
+docs {
+  Lista leads do tenant com paginação e filtros opcionais.
+  Filtros: stage (new|qualifying|hot|human|converted|lost),
+  channel (whatsapp|instagram), search (nome ou telefone),
+  minScore, maxScore, tags (separadas por vírgula).
+  Retorna { data: [...], meta: { total, page, limit, totalPages } }.
+}

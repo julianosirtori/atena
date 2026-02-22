@@ -1,0 +1,16 @@
+meta {
+  name: Listar tenants
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants
+  body: none
+  auth: none
+}
+
+docs {
+  Lista todos os tenants cadastrados.
+  Retorna array com id, name, slug e plan.
+}

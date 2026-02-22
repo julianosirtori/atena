@@ -1,0 +1,17 @@
+meta {
+  name: Buscar conversation por ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Retorna todos os dados de uma conversa específica,
+  incluindo contadores de mensagens, resumo da IA,
+  motivo de handoff e dados do lead.
+}

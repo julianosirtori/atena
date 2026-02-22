@@ -1,0 +1,22 @@
+meta {
+  name: Listar eventos do lead
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/leads/{{leadId}}/events
+  body: none
+  auth: none
+}
+
+params:query {
+  ~eventType: score_change
+}
+
+docs {
+  Lista eventos de um lead específico.
+  Filtro opcional: eventType (stage_change|score_change|assigned|
+  unassigned|tag_added|tag_removed|handoff|follow_up_sent|
+  converted|lost|reopened).
+}

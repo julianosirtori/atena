@@ -208,6 +208,47 @@ Channels (WhatsApp/Instagram) → Fastify Webhooks → BullMQ Queue → AI Worke
 - Target >80% test coverage by MVP
 - Cross-package imports use `@atena/*` package names (e.g., `import { env } from '@atena/config'`)
 
+## API Collections (Bruno)
+
+The `collections/` directory contains [Bruno](https://www.usebruno.com/) HTTP request collections for testing all API endpoints. Bruno files (`.bru`) are version-controlled and must stay in sync with the API routes.
+
+**IMPORTANT: Whenever you add, change, or remove an API route in `apps/api/src/routes/`, you MUST update the corresponding Bruno collection files in `collections/`.** This includes:
+
+- Creating new `.bru` files for new endpoints
+- Updating request bodies, query params, and docs when schemas change
+- Removing `.bru` files when endpoints are deleted
+- Keeping environment variables in `collections/environments/` up to date
+
+### Collection structure
+
+```
+collections/
+├── bruno.json                          # Bruno project config
+├── environments/
+│   ├── Local.bru                       # localhost:3000
+│   └── Docker.bru                      # Docker environment
+├── Health/                             # GET /health
+├── Webhooks/                           # POST /webhooks/whatsapp
+├── Tenants/                            # /api/v1/tenants
+├── Agents/                             # /api/v1/tenants/:tenantId/agents
+├── Leads/                              # /api/v1/tenants/:tenantId/leads
+├── Conversations/                      # /api/v1/tenants/:tenantId/conversations
+├── Messages/                           # /api/v1/.../conversations/:id/messages
+├── Notes/                              # /api/v1/.../conversations/:id/notes
+├── Lead Events/                        # /api/v1/tenants/:tenantId/events
+├── Security Incidents/                 # /api/v1/tenants/:tenantId/security-incidents
+├── Billing/                            # /api/v1/tenants/:tenantId/billing
+└── Dashboard/                          # /api/v1/tenants/:tenantId/dashboard
+```
+
+### Bruno file conventions
+
+- File names in **Brazilian Portuguese** (e.g., `Listar leads.bru`, `Criar agent.bru`)
+- Docs section in **Brazilian Portuguese** describing expected behavior
+- Use environment variables (`{{tenantId}}`, `{{agentId}}`, etc.) for dynamic IDs
+- Disabled query params use `~` prefix (e.g., `~stage: hot`) for optional filters
+- Sequence numbers (`seq`) control display order within each folder
+
 ## Development Notes
 
 - **No Z-API or Meta Cloud API credentials available yet** — use `MockAdapter` for all channel operations during development. The mock stores sent messages in memory for test inspection.
