@@ -47,6 +47,7 @@ export const envSchema = z.object({
   META_APP_SECRET: z.string().optional(),
 
   TELEGRAM_BOT_TOKEN: z.string().optional(),
+  PANEL_URL: z.string().url().optional().default('http://localhost:5173'),
 })
 
 export type Env = z.infer<typeof envSchema>

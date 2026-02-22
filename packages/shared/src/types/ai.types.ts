@@ -70,3 +70,13 @@ export interface HandoffDecision {
   reason: string | null
   source: 'ai' | 'score' | 'confidence' | 'max_turns' | 'explicit' | 'intent' | 'validation_failure'
 }
+
+export interface NotificationPayload {
+  tenantId: string
+  conversationId: string
+  leadId: string
+  leadName: string | null
+  leadScore: number
+  leadChannel: string
+  summary: string
+}

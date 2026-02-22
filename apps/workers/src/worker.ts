@@ -1,9 +1,22 @@
-import { Worker } from 'bullmq'
+import { Worker, Queue } from 'bullmq'
 import { env, QUEUE_NAMES } from '@atena/config'
 import { processMessage } from './services/message.pipeline.js'
 import type { ProcessMessageJob } from './services/message.pipeline.js'
 import { createAIService } from './services/ai.service.js'
+import { setQueues } from './services/handoff.service.js'
 import { logger } from './lib/logger.js'
+
+export function createQueues() {
+  const connection = { url: env.REDIS_URL }
+
+  const notificationQueue = new Queue(QUEUE_NAMES.SEND_NOTIFICATION, { connection })
+  const scheduledQueue = new Queue(QUEUE_NAMES.SCHEDULED, { connection })
+
+  // Wire queues into handoff service
+  setQueues(notificationQueue, scheduledQueue)
+
+  return { notificationQueue, scheduledQueue }
+}
 
 export function startMessageWorker(): Worker {
   const aiService = createAIService()

@@ -2,6 +2,7 @@ import { eq, and, ne, sql } from 'drizzle-orm'
 import { db, tenants, leads, conversations, messages } from '@atena/database'
 import type { InboundMessage } from '@atena/channels'
 import { getMessageQueue } from '../lib/queue.js'
+import { countLeadIfNew } from './billing.service.js'
 
 export class WebhookError extends Error {
   statusCode: number
@@ -138,6 +139,14 @@ export async function processInboundWhatsApp(
   }
 
   const lead = await upsertLead(tenant.id, inbound.from, inbound.channel)
+
+  // Count lead for billing (never blocks message processing)
+  try {
+    await countLeadIfNew(tenant.id, lead.id)
+  } catch {
+    // Billing failure must not block message processing
+  }
+
   const conversation = await findOrCreateConversation(tenant.id, lead.id, inbound.channel)
   const message = await saveInboundMessage(tenant.id, conversation.id, inbound)
 

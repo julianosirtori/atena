@@ -7,4 +7,5 @@ export type {
   ValidationResult,
   AICallResult,
   HandoffDecision,
+  NotificationPayload,
 } from './types/ai.types.js'

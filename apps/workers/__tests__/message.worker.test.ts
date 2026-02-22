@@ -86,6 +86,15 @@ vi.mock('../src/lib/logger.js', () => ({
   },
 }))
 
+vi.mock('../src/services/security-incident.service.js', () => ({
+  logSanitizationIncident: vi.fn().mockResolvedValue(undefined),
+  logValidationIncident: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('../src/services/handoff.service.js', () => ({
+  triggerHandoff: vi.fn().mockResolvedValue(undefined),
+}))
+
 import { processMessage, type ProcessMessageJob } from '../src/services/message.pipeline.js'
 import type { AIService } from '../src/services/ai.service.js'
 

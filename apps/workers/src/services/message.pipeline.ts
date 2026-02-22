@@ -1,5 +1,5 @@
 import { db } from '@atena/database'
-import { tenants, leads, conversations, messages, securityIncidents } from '@atena/database'
+import { tenants, leads, conversations, messages } from '@atena/database'
 import { eq, and, desc } from 'drizzle-orm'
 import { MockAdapter, ZApiAdapter, MetaWhatsAppAdapter } from '@atena/channels'
 import type { ChannelAdapter } from '@atena/channels'
@@ -9,6 +9,8 @@ import { buildSystemPrompt, buildUserPrompt } from './prompt.builder.js'
 import { parseAIResponse } from './response.parser.js'
 import { validateResponse } from './response.validator.js'
 import { updateScore, shouldAutoHandoff } from './scoring.service.js'
+import { logSanitizationIncident, logValidationIncident } from './security-incident.service.js'
+import { triggerHandoff } from './handoff.service.js'
 import type { AIService } from './ai.service.js'
 import { logger } from '../lib/logger.js'
 
@@ -18,9 +20,6 @@ export interface ProcessMessageJob {
   conversationId: string
   messageId: string
 }
-
-const HANDOFF_TRANSITION_MSG =
-  'Vou te conectar com um de nossos consultores para te ajudar com os detalhes. Um momento! 😊'
 
 const GENERIC_FALLBACK_MSG =
   'Desculpe, estou com dificuldades no momento. Vou te conectar com um de nossos consultores.'
@@ -217,7 +216,13 @@ export async function processMessage(
     log.error({ error }, 'AI call failed, using fallback')
     // Fallback: generic message + handoff
     await saveOutboundMessage(job, GENERIC_FALLBACK_MSG, 'ai', { intent: 'other', confidence: 0, tokens_used: 0 })
-    await performHandoff(job, tenant, 'AI service failure', log)
+    await triggerHandoff({
+      tenantId: job.tenantId,
+      conversationId: job.conversationId,
+      leadId: job.leadId,
+      reason: 'AI service failure',
+      handoffRules: tenant.handoffRules,
+    })
     return
   }
 
@@ -242,17 +247,14 @@ export async function processMessage(
     forceHandoff = true
 
     // Log security incident
-    await db.insert(securityIncidents).values({
-      tenantId: job.tenantId,
-      conversationId: job.conversationId,
-      leadId: job.leadId,
-      incidentType: mapReasonToIncidentType(validation.reason),
-      severity: validation.severity ?? 'low',
-      leadMessage: inboundMessage.content,
-      aiResponse: parsed.response,
-      detectionLayer: 'validation',
-      actionTaken: 'generic_response',
-    })
+    await logValidationIncident(
+      job.tenantId,
+      job.conversationId,
+      job.leadId,
+      inboundMessage.content,
+      parsed.response,
+      { reason: validation.reason, severity: validation.severity },
+    )
   } else {
     responseToSend = parsed.response
   }
@@ -297,7 +299,13 @@ export async function processMessage(
   })
 
   if (handoffDecision.shouldHandoff) {
-    await performHandoff(job, tenant, handoffDecision.reason!, log)
+    await triggerHandoff({
+      tenantId: job.tenantId,
+      conversationId: job.conversationId,
+      leadId: job.leadId,
+      reason: handoffDecision.reason!,
+      handoffRules: tenant.handoffRules,
+    })
   }
 
   // 13. Send message via channel adapter
@@ -400,48 +408,6 @@ function evaluateHandoff(params: {
   return { shouldHandoff: false, reason: null, source: 'ai' }
 }
 
-async function performHandoff(
-  job: ProcessMessageJob,
-  _tenant: typeof tenants.$inferSelect,
-  reason: string,
-  log: { info: (obj: unknown, msg?: string) => void; error: (obj: unknown, msg?: string) => void },
-): Promise<void> {
-  const now = new Date()
-
-  // Update conversation status
-  await db
-    .update(conversations)
-    .set({
-      status: 'waiting_human',
-      handoffReason: reason,
-      handoffAt: now,
-      updatedAt: now,
-    })
-    .where(eq(conversations.id, job.conversationId))
-
-  // Update lead stage
-  await db
-    .update(leads)
-    .set({ stage: 'human', updatedAt: now })
-    .where(and(eq(leads.id, job.leadId), eq(leads.tenantId, job.tenantId)))
-
-  // Save system transition message
-  await saveOutboundMessage(job, HANDOFF_TRANSITION_MSG, 'system', {})
-
-  // Record handoff event
-  const { leadEvents } = await import('@atena/database')
-  await db.insert(leadEvents).values({
-    tenantId: job.tenantId,
-    leadId: job.leadId,
-    eventType: 'handoff',
-    toValue: 'waiting_human',
-    createdBy: 'ai',
-    metadata: { reason },
-  })
-
-  log.info({ reason }, 'Handoff performed')
-}
-
 async function saveOutboundMessage(
   job: ProcessMessageJob,
   content: string,
@@ -460,12 +426,3 @@ async function saveOutboundMessage(
   })
 }
 
-function mapReasonToIncidentType(reason?: string): 'injection_attempt' | 'prompt_leak' | 'off_topic' | 'over_promise' | 'validation_failed' | 'identity_leak' {
-  switch (reason) {
-    case 'prompt_leak': return 'prompt_leak'
-    case 'identity_leak': return 'identity_leak'
-    case 'off_topic': return 'off_topic'
-    case 'over_promise': return 'over_promise'
-    default: return 'validation_failed'
-  }
-}
