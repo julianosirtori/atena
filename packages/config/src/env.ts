@@ -34,6 +34,10 @@ export const envSchema = z.object({
 
   CLAUDE_API_KEY: z.string().optional(),
 
+  OPENAI_API_KEY: z.string().optional(),
+  AI_PROVIDER: z.enum(['openai', 'anthropic']).default('openai'),
+  AI_MODEL: z.string().default('gpt-4o'),
+
   ZAPI_INSTANCE_ID: z.string().optional(),
   ZAPI_TOKEN: z.string().optional(),
   ZAPI_WEBHOOK_SECRET: z.string().optional(),

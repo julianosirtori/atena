@@ -1,2 +1,10 @@
-// Shared types and utilities
-// Will be populated as the project grows
+export type {
+  TenantForPrompt,
+  LeadForPrompt,
+  MessageForPrompt,
+  ParsedAIResponse,
+  SanitizationResult,
+  ValidationResult,
+  AICallResult,
+  HandoffDecision,
+} from './types/ai.types.js'
