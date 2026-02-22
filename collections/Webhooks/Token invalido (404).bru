@@ -1,0 +1,32 @@
+meta {
+  name: WhatsApp — Token inválido (404)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-webhook-token: token-que-nao-existe
+}
+
+body:json {
+  {
+    "phone": "5511999998888",
+    "messageId": "MSG-006",
+    "text": {
+      "message": "Oi"
+    },
+    "momment": "2026-02-22T10:05:00Z",
+    "isGroup": false
+  }
+}
+
+docs {
+  Token presente mas que não corresponde a nenhum tenant.
+  Esperado: 404 { error: "Tenant not found" }
+}

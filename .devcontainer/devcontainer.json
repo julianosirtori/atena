@@ -7,15 +7,31 @@
     "ghcr.io/devcontainers/features/node:1": {
       "version": "20"
     },
-    "ghcr.io/devcontainers/features/git:1": {}
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
+  "mounts": [
+    {
+      "source": "${localEnv:APPDATA}/GitHub CLI",
+      "target": "/home/node/.config/gh",
+      "type": "bind",
+      "consistency": "cached"
+    },
+    {
+      "source": "${localEnv:USERPROFILE}/.claude",
+      "target": "/home/node/.claude",
+      "type": "bind",
+      "consistency": "cached"
+    }
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
-        "ms-azuretools.vscode-docker"
+        "ms-azuretools.vscode-docker",
+        "anthropics.claude-code"
       ],
       "settings": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -26,12 +42,12 @@
       }
     }
   },
-  "postCreateCommand": "npm install && cp -n .env.example .env || true",
-  "postStartCommand": "echo '✅ Atena dev environment ready. Run: npm run dev'",
-  "forwardPorts": [3000, 5432, 6379],
+  "postCreateCommand": "npm install && (cp -n .env.example .env || true) && npm install -g @anthropic-ai/claude-code",
+  "postStartCommand": "echo '✅ Atena dev environment ready. CLIs: node, gh, claude. Run: npm run dev'",
+  "forwardPorts": [3000],
   "portsAttributes": {
-    "3000": { "label": "Atena API" },
-    "5432": { "label": "PostgreSQL" },
-    "6379": { "label": "Redis" }
+    "3000": { "label": "Atena API", "onAutoForward": "notify" },
+    "5433": { "label": "PostgreSQL", "onAutoForward": "ignore" },
+    "6379": { "label": "Redis", "onAutoForward": "ignore" }
   }
 }

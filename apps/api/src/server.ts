@@ -3,6 +3,7 @@ import cors from '@fastify/cors'
 import rateLimit from '@fastify/rate-limit'
 import { env } from '@atena/config'
 import { healthRoute } from './routes/health.js'
+import { whatsappWebhookRoute } from './routes/webhooks/whatsapp.js'
 
 export async function buildServer() {
   const server = Fastify({
@@ -31,6 +32,7 @@ export async function buildServer() {
   })
 
   await server.register(healthRoute)
+  await server.register(whatsappWebhookRoute)
 
   return server
 }

@@ -3,7 +3,7 @@
 > **Convenções:** DOR = Definition of Ready | DOD/Critérios de Aceite = Definition of Done
 > Testes unitários e e2e fazem parte do DOD de cada história.
 
-> **Total:** 4 épicos, 19 stories, estimativa ~74 story points
+> **Total:** 6 épicos, 26 stories, estimativa ~108 story points
 
 ---
 
@@ -932,18 +932,328 @@ Ref: 05-SEGURANCA.md Camada 5.
 ---
 
 
-## 🏔️ E-004: Polimento e Deploy MVP
+## 🏔️ E-004: Painel Admin / CRM
+
+Painel web para gestão operacional: configuração de tenants e canais, visualização de leads, conversas, mensagens, eventos e métricas. Foco em facilitar debug, teste e operação diária do MVP.
+
+Milestone: operador acessa o painel, configura tenant/canais, visualiza leads, conversas e eventos em tempo real.
+
+**Sprint:** Sprint 11-14
+
+
+### S-020: API CRUD — Endpoints REST para o Painel
+
+**Prioridade:** High | **Story Points:** 5 | **Sprint:** Sprint 11
+
+#### Descrição
+
+Como desenvolvedor, quero endpoints REST completos para todas as entidades do sistema, para alimentar o painel e facilitar debug via API.
+
+Endpoints:
+- **Tenants:** GET /tenants/:id, PUT /tenants/:id (update config, channels, handoff_rules)
+- **Agents:** GET /tenants/:id/agents, POST, PUT, DELETE
+- **Leads:** GET /tenants/:id/leads (filtros: stage, score_min, score_max, channel, search, page, limit), GET /tenants/:id/leads/:id
+- **Conversations:** GET /tenants/:id/conversations (filtros: status, lead_id, agent_id, page, limit), GET /tenants/:id/conversations/:id
+- **Messages:** GET /tenants/:id/conversations/:id/messages (paginação cursor-based)
+- **Lead Events:** GET /tenants/:id/leads/:id/events, GET /tenants/:id/events (todos)
+- **Security Incidents:** GET /tenants/:id/security-incidents (filtros: type, severity, resolved)
+- **Monthly Lead Counts:** GET /tenants/:id/billing/monthly-counts
+- **Dashboard:** GET /tenants/:id/dashboard (leads_today, leads_month, avg_score, handoff_rate, conversations_by_status, top_intents)
+
+Padrões:
+- Todas as rotas sob prefixo /api/v1
+- Paginação: ?page=1&limit=20 (list endpoints)
+- Filtros via query params
+- Resposta padronizada: { data, meta: { total, page, limit, totalPages } }
+- Validação de input com Zod schemas
+- Erros padronizados: { error: { code, message, details? } }
+
+#### DOR (Definition of Ready)
+
+✅ Schema do banco implementado (S-002)
+✅ Seed com dados de teste disponível
+✅ Fastify configurado com plugins (S-001)
+
+#### Critérios de Aceite (DOD)
+
+• Todos os endpoints retornam dados corretos do banco
+• Paginação funciona com meta.total e meta.totalPages
+• Filtros retornam subconjuntos corretos
+• Validação rejeita inputs inválidos com 400
+• Tenant isolation: endpoint só retorna dados do tenant da URL
+• PUT /tenants/:id atualiza whatsapp_config, handoff_rules, business info
+
+#### Testes Unitários
+
+• routes.test.ts: GET /api/v1/tenants/:id → retorna tenant com todos os campos
+• routes.test.ts: PUT /api/v1/tenants/:id com whatsapp_config válido → 200, config atualizada
+• routes.test.ts: PUT /api/v1/tenants/:id com plan='invalido' → 400
+• routes.test.ts: GET /api/v1/tenants/:id/leads?stage=hot → retorna apenas leads hot
+• routes.test.ts: GET /api/v1/tenants/:id/leads?page=2&limit=5 → paginação correta
+• routes.test.ts: GET /api/v1/tenants/:id/conversations/:id/messages → mensagens ordenadas por created_at
+• routes.test.ts: GET /api/v1/tenants/:id/dashboard → todos os campos de métricas presentes
+
+#### Testes E2E / Integração
+
+• crud.integration.ts: CRUD completo de agent (create, read, update, delete) com banco real
+• crud.integration.ts: PUT tenant.whatsapp_config → config persistida e retornada corretamente
+• crud.integration.ts: GET leads com filtros combinados (stage + score_min) → resultado correto
+• crud.integration.ts: GET conversations filtradas por status → apenas conversas com aquele status
+• crud.integration.ts: GET events de lead → todos os eventos ordenados cronologicamente
+• crud.integration.ts: GET security-incidents?severity=high → apenas incidentes high
+• crud.integration.ts: GET dashboard retorna métricas calculadas corretamente do seed
+
+---
+
+
+### S-021: Setup do Painel — React + Vite + Tailwind
+
+**Prioridade:** High | **Story Points:** 3 | **Sprint:** Sprint 11
+
+#### Descrição
+
+Como desenvolvedor, quero o app React configurado com roteamento, layout base e comunicação com a API, para construir as telas do painel rapidamente.
+
+Inclui:
+- Vite + React 19 + TypeScript (strict)
+- Tailwind CSS 4 para estilização
+- React Router para navegação
+- Layout com sidebar: Dashboard, Leads, Conversas, Eventos, Configurações
+- HTTP client (fetch wrapper) apontando para API
+- Componentes base: Table, Card, Badge, Button, Modal, Input, Select
+- Página 404 para rotas inexistentes
+- Seletor de tenant (MVP: dropdown simples, sem auth)
+- Responsivo (mobile-first)
+
+#### DOR (Definition of Ready)
+
+✅ API com GET /health funcionando (S-001)
+✅ Estrutura de diretórios do painel definida (02-ARQUITETURA.md)
+
+#### Critérios de Aceite (DOD)
+
+• npm run dev --workspace=@atena/panel sobe o app sem erros
+• Navegação entre páginas funciona sem reload
+• Layout responsivo: sidebar colapsa em mobile
+• Seletor de tenant carrega lista de tenants da API
+• Componentes base renderizam corretamente
+• Build de produção gera assets otimizados
+
+#### Testes Unitários
+
+• layout.test.tsx: sidebar renderiza todos os links de navegação
+• layout.test.tsx: sidebar colapsa em viewport mobile
+• api-client.test.ts: GET request monta URL correta com tenant_id
+• api-client.test.ts: GET com filtros → query params corretos na URL
+• api-client.test.ts: resposta com erro 4xx → throw com message do body
+• api-client.test.ts: resposta com erro 5xx → throw com mensagem genérica
+
+---
+
+
+### S-022: Gestão de Tenants — Configuração e Canais
+
+**Prioridade:** High | **Story Points:** 5 | **Sprint:** Sprint 12
+
+#### Descrição
+
+Como operador, quero visualizar e editar as configurações do tenant incluindo dados do negócio, configuração de canais WhatsApp e regras de handoff, para configurar e testar o sistema sem acessar o banco diretamente.
+
+Telas:
+- **Dados do negócio:** business_name, business_description, products_info, pricing_info, faq, business_hours, payment_methods, custom_instructions (formulário com textarea para campos longos)
+- **Canais WhatsApp:** whatsapp_provider (zapi/meta_cloud), whatsapp_config (JSON editor ou formulário por provider), telefone do WhatsApp, status da conexão
+- **Canais Instagram:** instagram_config (JSON editor)
+- **Telegram Bot:** telegram_bot_config (token, status)
+- **Regras de Handoff:** score_threshold, max_ai_turns, business_hours_only, handoff_intents (multi-select), auto_handoff_on_price (toggle), follow_up_enabled, follow_up_delay_hours
+- **Plano e Billing:** plan (visualização), leads_limit, billing_status, trial_ends_at
+- **Agents:** listar, criar, editar, ativar/desativar agents do tenant
+
+Cada seção é um card colapsável para organização visual.
+
+#### DOR (Definition of Ready)
+
+✅ API CRUD de tenants e agents implementada (S-020)
+✅ Componentes base disponíveis (S-021)
+
+#### Critérios de Aceite (DOD)
+
+• Formulário de edição do negócio salva todos os campos via PUT
+• Alteração do whatsapp_config persiste e é refletida imediatamente
+• JSON inválido no editor é rejeitado com mensagem de erro
+• Regras de handoff são editáveis com controles tipados (slider, toggle, multi-select)
+• CRUD de agents funciona: criar, editar nome/email/role, ativar/desativar
+• Feedback visual de sucesso/erro em todas as operações
+
+#### Testes Unitários
+
+• tenant-settings.test.tsx: formulário renderiza todos os campos do tenant
+• tenant-settings.test.tsx: submit com business_name vazio → exibe erro de validação
+• tenant-settings.test.tsx: submit válido → chama PUT /api/v1/tenants/:id com payload correto
+• tenant-settings.test.tsx: alteração de whatsapp_provider → campos do formulário mudam (zapi vs meta)
+• tenant-settings.test.tsx: handoff_rules.score_threshold slider → valor refletido em tempo real
+• agents-list.test.tsx: lista renderiza agents com nome, email, role, status
+• agents-list.test.tsx: botão criar → modal com formulário, submit → POST chamado
+• agents-list.test.tsx: toggle ativo/inativo → PUT chamado com is_active correto
+
+---
+
+
+### S-023: Gestão de Leads — Listagem, Pipeline e Detalhes
+
+**Prioridade:** High | **Story Points:** 5 | **Sprint:** Sprint 12-13
+
+#### Descrição
+
+Como operador, quero visualizar leads em lista e pipeline kanban, com detalhes completos e timeline de eventos, para acompanhar o funil e debugar o scoring.
+
+Telas:
+- **Lista de Leads:** tabela com colunas (nome, phone, channel, stage, score, last_contact_at, tags), filtros por stage/score/channel/search, paginação, ordenação
+- **Pipeline Kanban:** colunas por stage (new, qualifying, hot, human, converted, lost), cards com nome + score + última msg, drag-and-drop para mover stage manualmente
+- **Detalhe do Lead:** dados do lead, score gauge visual, tags editáveis, histórico de conversas, timeline de lead_events (score_change, stage_change, handoff, etc.), metadados (UTM, source)
+- **Ações:** editar nome/tags/stage manualmente, ver todas as conversas do lead
+
+#### DOR (Definition of Ready)
+
+✅ API de leads e lead_events implementada (S-020)
+✅ Componentes base disponíveis (S-021)
+
+#### Critérios de Aceite (DOD)
+
+• Lista carrega com paginação e filtros funcionais
+• Pipeline kanban renderiza leads nos stages corretos
+• Drag-and-drop move lead de stage e persiste via API
+• Detalhe mostra score, tags, conversas e timeline de eventos
+• Timeline exibe score_change com from/to e delta visual (+10, -5)
+• Busca por nome ou telefone funciona
+
+#### Testes Unitários
+
+• leads-list.test.tsx: renderiza tabela com dados dos leads
+• leads-list.test.tsx: filtro por stage=hot → chama API com ?stage=hot
+• leads-list.test.tsx: paginação → chama API com ?page=2
+• pipeline.test.tsx: renderiza colunas por stage com contagem
+• pipeline.test.tsx: drag lead de 'new' para 'qualifying' → chama PUT /leads/:id com stage='qualifying'
+• lead-detail.test.tsx: renderiza score, tags, e link para conversas
+• lead-detail.test.tsx: timeline renderiza eventos em ordem cronológica reversa
+• lead-detail.test.tsx: evento score_change mostra delta com cor (verde +, vermelho -)
+
+---
+
+
+### S-024: Visualização de Conversas e Mensagens
+
+**Prioridade:** High | **Story Points:** 5 | **Sprint:** Sprint 13
+
+#### Descrição
+
+Como operador, quero visualizar conversas com histórico de mensagens no estilo chat, incluindo metadados da IA e flags de segurança, para debugar o fluxo de IA e handoff.
+
+Telas:
+- **Lista de Conversas:** tabela com (lead.name, status badge, channel, agent, ai_messages_count, lead_messages_count, opened_at, handoff_reason), filtros por status/channel
+- **Chat View:** layout estilo WhatsApp com bolhas de mensagem, cores diferenciadas por sender_type (lead=cinza, ai=azul, agent=verde, system=amarelo), timestamp em cada mensagem
+- **Metadados da Mensagem:** ao clicar em msg da IA → expandir: intent, confidence, score_delta, should_handoff, extracted_info, injection_flags, validation_result, delivery_status
+- **Info da Conversa:** sidebar com status, agent atribuído, handoff_reason, ai_summary, contadores, first_response_time_ms
+- **Notas da Conversa:** lista de conversation_notes com autor e timestamp, campo para adicionar nova nota
+
+#### DOR (Definition of Ready)
+
+✅ API de conversas, mensagens e notas implementada (S-020)
+✅ Componentes base disponíveis (S-021)
+
+#### Critérios de Aceite (DOD)
+
+• Lista de conversas carrega com filtros e paginação
+• Chat view renderiza mensagens com cores por sender_type
+• Metadados da IA são exibidos ao clicar na mensagem
+• Flags de injection são destacadas visualmente (badge vermelho)
+• Sidebar mostra info completa da conversa
+• Notas podem ser visualizadas e adicionadas
+• Mensagens carregam com scroll infinito (cursor pagination)
+
+#### Testes Unitários
+
+• conversations-list.test.tsx: renderiza conversas com status badge colorido
+• conversations-list.test.tsx: filtro por status=waiting_human → chama API corretamente
+• chat-view.test.tsx: renderiza mensagens com cor correta por sender_type
+• chat-view.test.tsx: mensagem de lead à esquerda, ai/agent à direita
+• chat-view.test.tsx: clique em msg AI → expande painel de metadados (intent, confidence, etc.)
+• chat-view.test.tsx: msg com injection_flags=['possible_injection'] → badge vermelho visível
+• chat-view.test.tsx: msg system (handoff transition) → estilo diferenciado (centralizada, amarela)
+• conversation-notes.test.tsx: renderiza notas existentes com autor e data
+• conversation-notes.test.tsx: submit nova nota → POST chamado com content
+
+---
+
+
+### S-025: Dashboard de Eventos, Segurança e Métricas
+
+**Prioridade:** Medium | **Story Points:** 3 | **Sprint:** Sprint 14
+
+#### Descrição
+
+Como operador, quero um dashboard com métricas do sistema, timeline de eventos e log de incidentes de segurança, para monitorar a saúde do MVP e identificar problemas rapidamente.
+
+Telas:
+- **Dashboard Home:**
+  - Cards de resumo: leads hoje, leads no mês, conversas ativas (por status), score médio
+  - Gráfico de leads/dia (últimos 30 dias — barras simples)
+  - Taxa de handoff (% conversas que fizeram handoff)
+  - Top intents (ranking das intents mais frequentes)
+  - Monthly lead counts vs limite do plano (barra de progresso)
+- **Eventos do Sistema:**
+  - Timeline global de lead_events filtráveis por event_type
+  - Visualização: tipo, lead, from→to, created_by, timestamp
+- **Incidentes de Segurança:**
+  - Lista de security_incidents com filtros (type, severity, resolved)
+  - Detalhe: lead_message original, ai_response gerada, detection_layer, action_taken
+  - Ação: marcar como resolved
+  - Resumo: contagem por tipo e severidade (tabela pivô)
+- **Status do Sistema:**
+  - Health check da API (GET /health)
+  - Status das filas BullMQ (jobs waiting, active, completed, failed)
+  - Contagem de registros por tabela (debug)
+
+#### DOR (Definition of Ready)
+
+✅ API de dashboard, events e security-incidents implementada (S-020)
+✅ Dados de seed disponíveis para popular métricas
+✅ Componentes base disponíveis (S-021)
+
+#### Critérios de Aceite (DOD)
+
+• Dashboard home carrega todas as métricas
+• Monthly lead count exibe barra de progresso vs limite
+• Timeline de eventos é filtrável por tipo
+• Incidentes de segurança são listáveis e marcáveis como resolved
+• Detalhe do incidente mostra mensagem original e resposta da IA
+• Status do sistema mostra health e estado das filas
+
+#### Testes Unitários
+
+• dashboard.test.tsx: renderiza cards de métricas com valores da API
+• dashboard.test.tsx: barra de progresso leads/limite exibe % correta
+• events-timeline.test.tsx: renderiza eventos em ordem cronológica
+• events-timeline.test.tsx: filtro por event_type=handoff → chama API com filtro
+• security-incidents.test.tsx: renderiza lista com badge de severity (cores: low=cinza, medium=amarelo, high=laranja, critical=vermelho)
+• security-incidents.test.tsx: clique em incidente → expande detalhe com lead_message e ai_response
+• security-incidents.test.tsx: botão resolver → PUT chamado, badge muda para 'resolved'
+• system-status.test.tsx: exibe health status verde quando API responde 200
+
+---
+
+
+## 🏔️ E-005: Polimento e Deploy MVP
 
 Error handling robusto, deploy em produção na Hetzner, e teste end-to-end completo do MVP.
 
 Milestone: MVP deployed e rodando em produção com 1 número de WhatsApp real.
 
-**Sprint:** Sprint 12-14
+**Sprint:** Sprint 15-17
 
 
 ### S-017: Error Handling e Resiliência
 
-**Prioridade:** High | **Story Points:** 3 | **Sprint:** Sprint 12
+**Prioridade:** High | **Story Points:** 3 | **Sprint:** Sprint 15
 
 #### Descrição
 
@@ -990,7 +1300,7 @@ Configurar:
 
 ### S-018: Deploy em Produção — Hetzner VPS
 
-**Prioridade:** High | **Story Points:** 3 | **Sprint:** Sprint 13
+**Prioridade:** High | **Story Points:** 3 | **Sprint:** Sprint 16
 
 #### Descrição
 
@@ -1034,7 +1344,7 @@ Inclui:
 
 ### S-019: Teste End-to-End Completo do MVP
 
-**Prioridade:** Highest | **Story Points:** 3 | **Sprint:** Sprint 14
+**Prioridade:** Highest | **Story Points:** 3 | **Sprint:** Sprint 17
 
 #### Descrição
 
@@ -1044,7 +1354,7 @@ Checklist completo com número de WhatsApp real, bot do Telegram real, e IA resp
 
 #### DOR (Definition of Ready)
 
-✅ Todos os componentes implementados (S-001 a S-018)
+✅ Todos os componentes implementados (S-001 a S-025)
 ✅ Deploy em produção (S-018)
 ✅ Número WhatsApp conectado
 ✅ Bot Telegram configurado com agent
@@ -1074,5 +1384,112 @@ CHECKLIST E2E MANUAL EM PRODUÇÃO:
 12. Verificar lead_events: score_change e stage_change registrados
 13. Enviar 50 mensagens em sequência → sistema estável, sem timeouts
 14. Verificar logs: sem exceções não tratadas
+15. Painel: acessar dashboard → métricas carregam corretamente
+16. Painel: editar whatsapp_config do tenant → config salva e refletida
+17. Painel: abrir conversa no chat view → mensagens renderizam com metadados da IA
+18. Painel: visualizar security_incidents → incidentes de injection aparecem com detalhe
+
+---
+
+
+## 🏔️ E-006: Onboarding de Canais
+
+Provisioning automatizado de canais de comunicação (WhatsApp, Instagram). Operador conecta um novo canal pelo painel sem precisar copiar credenciais manualmente. Arquitetura extensível para múltiplos providers.
+
+Milestone: operador clica "Conectar WhatsApp", sistema cria instância no provider, configura webhook automaticamente, e canal fica pronto para receber mensagens.
+
+**Sprint:** Sprint 18+
+
+
+### S-026: Onboarding de Canal — Provisioning Automatizado
+
+**Prioridade:** Medium | **Story Points:** 8 | **Sprint:** Sprint 18
+
+#### Descrição
+
+Como operador, quero conectar o WhatsApp de um tenant pelo painel sem acessar o Z-API ou Meta manualmente, para que o onboarding seja simples e sem erros de configuração.
+
+O sistema deve suportar múltiplos providers de forma extensível:
+- **Z-API** (MVP): cria instância, recebe `instanceId`/`token`, gera `webhookSecret`, configura callback URL
+- **Meta Cloud API** (futuro): configura app, webhook verify token, WABA ID
+- **Instagram** (futuro): vincula página, configura webhook
+
+Arquitetura — interface `ChannelProvisioner`:
+
+```typescript
+interface ProvisioningResult {
+  provider: 'zapi' | 'meta_cloud'
+  config: Record<string, unknown>  // salvo em whatsapp_config
+  webhookUrl: string               // URL pública configurada no provider
+  status: 'pending_qr' | 'connected' | 'error'
+  qrCode?: string                  // base64 do QR code (Z-API)
+}
+
+interface ChannelProvisioner {
+  createInstance(tenantId: string): Promise<ProvisioningResult>
+  getConnectionStatus(config: Record<string, unknown>): Promise<'disconnected' | 'pending_qr' | 'connected'>
+  getQrCode(config: Record<string, unknown>): Promise<string | null>
+  deleteInstance(config: Record<string, unknown>): Promise<void>
+  configureWebhook(config: Record<string, unknown>, callbackUrl: string): Promise<void>
+}
+```
+
+Fluxo Z-API completo:
+1. Operador clica "Conectar WhatsApp" no painel e seleciona provider (Z-API ou Meta)
+2. API chama `ZApiProvisioner.createInstance(tenantId)`
+3. Provisioner chama `POST https://api.z-api.io/instances` → recebe `instanceId` + `token`
+4. Gera `webhookSecret` (UUID v4 aleatório)
+5. Chama `configureWebhook()` → `PUT https://api.z-api.io/instances/{id}/webhook` com callback URL `https://{domain}/webhooks/whatsapp` e token
+6. Salva `whatsapp_config` no tenant: `{ instanceId, token, webhookSecret, phone }`
+7. Retorna QR code para operador escanear com WhatsApp
+8. Painel faz polling no status até `connected`
+
+Endpoints:
+- `POST /api/v1/tenants/:id/channels/whatsapp/provision` — inicia provisioning
+- `GET /api/v1/tenants/:id/channels/whatsapp/status` — status da conexão
+- `GET /api/v1/tenants/:id/channels/whatsapp/qr-code` — QR code atual
+- `DELETE /api/v1/tenants/:id/channels/whatsapp` — desconecta e remove instância
+
+#### DOR (Definition of Ready)
+
+✅ Interface ChannelAdapter implementada (S-003, S-004)
+✅ API CRUD de tenants implementada (S-020)
+✅ Painel de configuração de tenants implementado (S-022)
+✅ Documentação da API do Z-API para criação de instâncias consultada
+✅ URL pública disponível (S-018) para configurar callback
+
+#### Critérios de Aceite (DOD)
+
+• Interface `ChannelProvisioner` definida em `packages/channels/`
+• `ZApiProvisioner` implementa a interface completa
+• `whatsapp_config` preenchido automaticamente (operador não digita nenhuma credencial)
+• `webhookSecret` gerado como UUID v4 seguro
+• Callback URL configurada automaticamente no Z-API
+• QR code retornado para o operador escanear
+• Status polling funciona (pending_qr → connected)
+• Desconexão remove instância no Z-API e limpa config do tenant
+• Provisioner é injetável — trocar de Z-API para Meta não exige mudanças fora do provisioner
+
+#### Testes Unitários
+
+• zapi.provisioner.test.ts: createInstance chama POST /instances e retorna config com instanceId, token, webhookSecret
+• zapi.provisioner.test.ts: webhookSecret gerado é UUID v4 válido
+• zapi.provisioner.test.ts: configureWebhook chama PUT /instances/{id}/webhook com URL e token corretos
+• zapi.provisioner.test.ts: getConnectionStatus retorna 'connected' quando Z-API responde connected
+• zapi.provisioner.test.ts: getConnectionStatus retorna 'pending_qr' quando Z-API responde waiting
+• zapi.provisioner.test.ts: getQrCode retorna base64 string do QR
+• zapi.provisioner.test.ts: deleteInstance chama DELETE /instances/{id}
+• zapi.provisioner.test.ts: createInstance com Z-API retornando erro → throw ProvisioningError
+• provisioner.factory.test.ts: provider='zapi' → retorna ZApiProvisioner
+• provisioner.factory.test.ts: provider='meta_cloud' → retorna MetaCloudProvisioner (stub/not implemented)
+• provisioner.factory.test.ts: provider desconhecido → throw UnsupportedProviderError
+
+#### Testes E2E / Integração
+
+• provisioning.integration.ts (Z-API mockada): POST /provision → whatsapp_config salvo no banco com instanceId, token, webhookSecret
+• provisioning.integration.ts: GET /status após provisioning → retorna status correto
+• provisioning.integration.ts: DELETE /channels/whatsapp → whatsapp_config resetado para {}
+• provisioning.integration.ts: provisioning + enviar msg no webhook com webhookSecret gerado → 200 OK (fluxo completo)
+• provisioning.integration.ts: provisioning com Z-API down → 502 Bad Gateway com mensagem clara
 
 ---

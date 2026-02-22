@@ -1,4 +1,5 @@
 import { env } from '@atena/config'
+import { closeQueues } from './lib/queue.js'
 
 async function main() {
   // Validate env early — will throw if invalid
@@ -17,6 +18,7 @@ async function main() {
 
   const shutdown = async () => {
     server.log.info('Shutting down...')
+    await closeQueues()
     await server.close()
     process.exit(0)
   }

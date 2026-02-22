@@ -2,8 +2,8 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 
 // Set required env vars before importing server (which imports env)
-process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/atena_test'
-process.env.REDIS_URL = 'redis://localhost:6379'
+process.env.DATABASE_URL = 'postgres://atena:atena_dev@postgres:5432/atena'
+process.env.REDIS_URL = 'redis://redis:6379'
 process.env.NODE_ENV = 'test'
 process.env.LOG_LEVEL = 'error'
 

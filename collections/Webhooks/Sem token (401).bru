@@ -1,0 +1,28 @@
+meta {
+  name: WhatsApp — Sem token (401)
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "phone": "5511999998888",
+    "messageId": "MSG-005",
+    "text": {
+      "message": "Oi"
+    },
+    "momment": "2026-02-22T10:04:00Z",
+    "isGroup": false
+  }
+}
+
+docs {
+  Sem header x-webhook-token.
+  Esperado: 401 Unauthorized
+}

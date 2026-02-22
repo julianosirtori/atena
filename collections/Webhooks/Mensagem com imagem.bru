@@ -1,0 +1,33 @@
+meta {
+  name: WhatsApp — Mensagem com imagem
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-webhook-token: {{webhookToken}}
+}
+
+body:json {
+  {
+    "phone": "5511999998888",
+    "messageId": "MSG-002",
+    "image": {
+      "imageUrl": "https://example.com/foto.jpg",
+      "caption": "Foto do produto"
+    },
+    "momment": "2026-02-22T10:01:00Z",
+    "isGroup": false
+  }
+}
+
+docs {
+  Simula o recebimento de uma imagem do Z-API.
+  Esperado: 200 { status: "ok" }
+}

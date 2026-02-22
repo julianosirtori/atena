@@ -1,0 +1,32 @@
+meta {
+  name: WhatsApp — Mensagem de grupo (ignorada)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-webhook-token: {{webhookToken}}
+}
+
+body:json {
+  {
+    "phone": "5511999998888",
+    "messageId": "MSG-004",
+    "text": {
+      "message": "Mensagem de grupo"
+    },
+    "momment": "2026-02-22T10:03:00Z",
+    "isGroup": true
+  }
+}
+
+docs {
+  Mensagens de grupo são ignoradas pelo adapter.
+  Esperado: 200 { status: "ignored" }
+}

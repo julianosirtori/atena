@@ -1,0 +1,33 @@
+meta {
+  name: WhatsApp — Mensagem de texto
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-webhook-token: {{webhookToken}}
+}
+
+body:json {
+  {
+    "phone": "5511999998888",
+    "messageId": "MSG-001",
+    "text": {
+      "message": "Oi, quero saber dos produtos"
+    },
+    "momment": "2026-02-22T10:00:00Z",
+    "isGroup": false
+  }
+}
+
+docs {
+  Simula o recebimento de uma mensagem de texto do Z-API.
+  Cria lead, conversa, salva mensagem e enfileira job no BullMQ.
+  Esperado: 200 { status: "ok" }
+}
