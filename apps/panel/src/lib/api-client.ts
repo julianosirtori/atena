@@ -1,4 +1,5 @@
 const BASE_URL = '/api/v1'
+const REQUEST_TIMEOUT_MS = 10_000
 
 class ApiClient {
   private tenantId: string | null = null
@@ -15,6 +16,14 @@ class ApiClient {
     return `${BASE_URL}/tenants/${this.tenantId}${path}`
   }
 
+  private fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+    return fetch(url, { ...init, signal: controller.signal }).finally(() =>
+      clearTimeout(timeoutId),
+    )
+  }
+
   async get<T>(path: string, params?: Record<string, string>): Promise<T> {
     const url = new URL(this.url(path), window.location.origin)
     if (params) {
@@ -22,7 +31,7 @@ class ApiClient {
         if (v !== undefined && v !== '') url.searchParams.set(k, v)
       }
     }
-    const res = await fetch(url.toString())
+    const res = await this.fetchWithTimeout(url.toString())
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
       throw new ApiError(res.status, body.error?.message || res.statusText, body.error)
@@ -31,7 +40,7 @@ class ApiClient {
   }
 
   async post<T>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(this.url(path), {
+    const res = await this.fetchWithTimeout(this.url(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -44,7 +53,7 @@ class ApiClient {
   }
 
   async put<T>(path: string, body: unknown): Promise<T> {
-    const res = await fetch(this.url(path), {
+    const res = await this.fetchWithTimeout(this.url(path), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -57,7 +66,7 @@ class ApiClient {
   }
 
   async del(path: string): Promise<void> {
-    const res = await fetch(this.url(path), { method: 'DELETE' })
+    const res = await this.fetchWithTimeout(this.url(path), { method: 'DELETE' })
     if (!res.ok && res.status !== 204) {
       const data = await res.json().catch(() => ({}))
       throw new ApiError(res.status, data.error?.message || res.statusText, data.error)

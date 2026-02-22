@@ -10,6 +10,7 @@ export interface TenantContextValue {
   tenants: { id: string; name: string; slug: string; plan: string }[]
   setTenantId: (id: string) => void
   isLoading: boolean
+  error: Error | null
 }
 
 export const TenantContext = createContext<TenantContextValue>({
@@ -18,6 +19,7 @@ export const TenantContext = createContext<TenantContextValue>({
   tenants: [],
   setTenantId: () => {},
   isLoading: true,
+  error: null,
 })
 
 export function TenantProvider({ children }: { children: ReactNode }) {
@@ -25,7 +27,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     return localStorage.getItem('atena_tenant_id')
   })
 
-  const { data: tenantsData, isLoading: isLoadingTenants } = useQuery({
+  const {
+    data: tenantsData,
+    isLoading: isLoadingTenants,
+    error: tenantsError,
+  } = useQuery({
     queryKey: queryKeys.tenants.all,
     queryFn: () =>
       api.get<ListResponse<{ id: string; name: string; slug: string; plan: string }>>(
@@ -33,7 +39,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       ),
   })
 
-  const { data: tenantData, isLoading: isLoadingTenant } = useQuery({
+  const {
+    data: tenantData,
+    isLoading: isLoadingTenant,
+    error: tenantError,
+  } = useQuery({
     queryKey: queryKeys.tenants.detail(tenantId || ''),
     queryFn: () =>
       api.get<{ data: Tenant }>(`/tenants/${tenantId}`),
@@ -41,6 +51,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   })
 
   const tenants = tenantsData?.data ?? []
+  const error = tenantsError || tenantError || null
 
   // Auto-select first tenant if none selected
   useEffect(() => {
@@ -68,6 +79,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         tenants,
         setTenantId,
         isLoading: isLoadingTenants || isLoadingTenant,
+        error,
       }}
     >
       {children}

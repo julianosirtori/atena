@@ -1,9 +1,42 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar.js'
 import { useState } from 'react'
+import { useTenant } from '../../hooks/useTenant.js'
+import { Spinner } from '../ui/Spinner.js'
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { isLoading, error, tenants } = useTenant()
+
+  if (isLoading && tenants.length === 0) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-sm text-gray-500">Carregando...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && tenants.length === 0) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="max-w-sm rounded-lg bg-white p-6 text-center shadow-lg">
+          <p className="text-lg font-semibold text-gray-800">Falha ao conectar</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Nao foi possivel conectar ao servidor. Verifique se a API esta rodando em localhost:3000.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
