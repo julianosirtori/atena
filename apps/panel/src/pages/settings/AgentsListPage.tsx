@@ -14,7 +14,7 @@ import { Spinner } from '../../components/ui/Spinner.js'
 import { EmptyState } from '../../components/ui/EmptyState.js'
 import type { Agent, ListResponse, SingleResponse } from '../../types/api.types.js'
 
-export function AgentsListPage() {
+export default function AgentsListPage() {
   const { tenantId } = useTenant()
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)

@@ -7,7 +7,7 @@ import { Spinner } from '../components/ui/Spinner.js'
 import { formatNumber } from '../lib/format.js'
 import type { DashboardData, SingleResponse } from '../types/api.types.js'
 
-export function DashboardPage() {
+export default function DashboardPage() {
   const { tenantId, tenant } = useTenant()
 
   const { data, isLoading } = useQuery({

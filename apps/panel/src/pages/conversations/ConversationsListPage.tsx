@@ -14,7 +14,7 @@ import { Button } from '../../components/ui/Button.js'
 import { timeAgo } from '../../lib/format.js'
 import type { Conversation, PaginatedResponse } from '../../types/api.types.js'
 
-export function ConversationsListPage() {
+export default function ConversationsListPage() {
   const { tenantId } = useTenant()
   const navigate = useNavigate()
   const [page, setPage] = useState(1)

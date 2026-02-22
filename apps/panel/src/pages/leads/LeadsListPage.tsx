@@ -16,7 +16,7 @@ import { Button } from '../../components/ui/Button.js'
 import { timeAgo } from '../../lib/format.js'
 import type { Lead, PaginatedResponse } from '../../types/api.types.js'
 
-export function LeadsListPage() {
+export default function LeadsListPage() {
   const { tenantId } = useTenant()
   const navigate = useNavigate()
   const [page, setPage] = useState(1)

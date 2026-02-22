@@ -20,7 +20,7 @@ import type {
   ListResponse,
 } from '../../types/api.types.js'
 
-export function ChatViewPage() {
+export default function ChatViewPage() {
   const { conversationId } = useParams<{ conversationId: string }>()
   const { tenantId } = useTenant()
   const queryClient = useQueryClient()

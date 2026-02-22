@@ -9,7 +9,7 @@ import { Input } from '../../components/ui/Input.js'
 import { Spinner } from '../../components/ui/Spinner.js'
 import type { Tenant, SingleResponse } from '../../types/api.types.js'
 
-export function TenantSettingsPage() {
+export default function TenantSettingsPage() {
   const { tenantId } = useTenant()
   const queryClient = useQueryClient()
 

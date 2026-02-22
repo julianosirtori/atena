@@ -15,7 +15,7 @@ import { Badge } from '../../components/ui/Badge.js'
 import { formatDate, timeAgo } from '../../lib/format.js'
 import type { Lead, Conversation, LeadEvent, SingleResponse, ListResponse } from '../../types/api.types.js'
 
-export function LeadDetailPage() {
+export default function LeadDetailPage() {
   const { leadId } = useParams<{ leadId: string }>()
   const { tenantId } = useTenant()
   const queryClient = useQueryClient()

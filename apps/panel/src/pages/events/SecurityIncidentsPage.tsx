@@ -20,7 +20,7 @@ const severityColors: Record<string, 'gray' | 'yellow' | 'red' | 'purple'> = {
   critical: 'purple',
 }
 
-export function SecurityIncidentsPage() {
+export default function SecurityIncidentsPage() {
   const { tenantId } = useTenant()
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)

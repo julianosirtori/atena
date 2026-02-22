@@ -40,7 +40,7 @@ const eventColors: Record<string, 'blue' | 'green' | 'red' | 'yellow' | 'gray' |
   reopened: 'blue',
 }
 
-export function EventsTimelinePage() {
+export default function EventsTimelinePage() {
   const { tenantId } = useTenant()
   const [eventType, setEventType] = useState('')
   const [page, setPage] = useState(1)

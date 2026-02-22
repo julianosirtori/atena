@@ -17,7 +17,7 @@ const stages: { key: LeadStage; label: string; color: string }[] = [
   { key: 'lost', label: 'Perdido', color: 'border-gray-400' },
 ]
 
-export function PipelinePage() {
+export default function PipelinePage() {
   const { tenantId } = useTenant()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
