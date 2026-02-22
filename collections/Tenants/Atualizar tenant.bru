@@ -19,10 +19,70 @@ body:json {
 }
 
 docs {
-  Atualiza campos do tenant. Todos os campos são opcionais.
-  Campos disponíveis: name, businessName, businessDescription,
-  productsInfo, pricingInfo, faq, businessHours, paymentMethods,
-  customInstructions, plan, leadsLimit, agentsLimit,
-  whatsappProvider, whatsappConfig, instagramConfig,
-  telegramBotConfig, handoffRules.
+  # Atualizar tenant
+
+  Atualiza campos do tenant. Todos os campos são opcionais — envie apenas os que deseja alterar.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `id` | UUID | ID do tenant |
+
+  ## Body (todos opcionais)
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `name` | string | Min 1 caractere |
+  | `businessName` | string | Min 1 caractere |
+  | `businessDescription` | string | — |
+  | `productsInfo` | string | — |
+  | `pricingInfo` | string | — |
+  | `faq` | string | — |
+  | `businessHours` | string | — |
+  | `paymentMethods` | string | — |
+  | `customInstructions` | string | — |
+  | `plan` | enum | `starter`, `pro`, `scale` |
+  | `leadsLimit` | integer | Positivo |
+  | `agentsLimit` | integer | Positivo |
+  | `whatsappProvider` | enum | `zapi`, `meta_cloud` |
+  | `whatsappConfig` | object | — |
+  | `instagramConfig` | object | — |
+  | `telegramBotConfig` | object | — |
+  | `handoffRules` | object | Ver abaixo |
+
+  ### Estrutura de `handoffRules`
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `score_threshold` | integer | 0–100 |
+  | `max_ai_turns` | integer | 1–50 |
+  | `business_hours_only` | boolean | — |
+  | `handoff_intents` | string[] | Lista de intenções |
+  | `auto_handoff_on_price` | boolean | — |
+  | `follow_up_enabled` | boolean | — |
+  | `follow_up_delay_hours` | integer | 1–168 |
+
+  ## Resposta (200)
+
+  Retorna o tenant atualizado (mesma estrutura do GET por ID).
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | Erro de validação |
+  | `404` | Tenant não encontrado |
+
+  ```json
+  {
+    "error": {
+      "code": "ValidationError",
+      "message": "Validation error",
+      "details": {
+        "plan": ["Invalid enum value"]
+      }
+    }
+  }
+  ```
 }

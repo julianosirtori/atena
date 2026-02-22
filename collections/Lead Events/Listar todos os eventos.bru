@@ -17,7 +17,47 @@ params:query {
 }
 
 docs {
-  Lista todos os eventos do tenant com paginação.
-  Filtro opcional: eventType.
-  Retorna { data: [...], meta: { total, page, limit, totalPages } }.
+  # Listar todos os eventos do tenant
+
+  Lista todos os eventos de todos os leads do tenant com paginação offset.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Query params
+
+  | Param | Tipo | Default | Descrição |
+  |-------|------|---------|-----------|
+  | `page` | integer | `1` | Página (mín: 1) |
+  | `limit` | integer | `20` | Itens por página (1–100) |
+  | `eventType` | enum | — | Filtro por tipo (ver "Listar eventos do lead") |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "leadId": "uuid",
+        "eventType": "handoff",
+        "fromValue": null,
+        "toValue": "waiting_human",
+        "createdBy": "ai",
+        "metadata": {
+          "reason": "Lead solicitou atendente humano"
+        },
+        "createdAt": "2026-02-14T16:40:00.000Z"
+      }
+    ],
+    "meta": {
+      "page": 1,
+      "limit": 20
+    }
+  }
+  ```
 }

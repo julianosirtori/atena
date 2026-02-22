@@ -11,6 +11,40 @@ get {
 }
 
 docs {
-  Lista todas as notas de uma conversa.
-  Notas são anotações internas dos agentes sobre a conversa.
+  # Listar notes
+
+  Lista todas as notas internas de uma conversa. Notas são anotações dos agentes — não são visíveis para o lead.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `conversationId` | UUID | ID da conversa |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "conversationId": "uuid",
+        "agentId": "uuid",
+        "content": "Lead demonstrou interesse em garantia estendida.",
+        "createdAt": "2026-02-14T16:45:00.000Z"
+      }
+    ]
+  }
+  ```
+
+  ## Campos da resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `id` | UUID | ID da nota |
+  | `agentId` | UUID | Agente que criou a nota |
+  | `content` | string | Conteúdo da nota |
+  | `createdAt` | timestamp | Data de criação |
 }

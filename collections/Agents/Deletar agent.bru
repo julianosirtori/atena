@@ -11,6 +11,24 @@ delete {
 }
 
 docs {
+  # Deletar agent
+
   Remove um agente do tenant.
-  Retorna 204 No Content.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `agentId` | UUID | ID do agente |
+
+  ## Resposta (204)
+
+  Sem corpo — retorna `204 No Content`.
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `404` | Agente não encontrado |
 }

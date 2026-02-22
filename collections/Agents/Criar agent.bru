@@ -26,10 +26,62 @@ body:json {
 }
 
 docs {
+  # Criar agent
+
   Cria um novo agente para o tenant.
-  Campos obrigatórios: name, email, password.
-  Campos opcionais: role (admin|agent, default: agent),
-  telegramChatId, maxConcurrent (1-50, default: 10),
-  notificationPreferences.
-  Retorna 201 com o agente criado.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Body
+
+  | Campo | Tipo | Obrigatório | Validação |
+  |-------|------|-------------|-----------|
+  | `name` | string | **Sim** | Min 1 caractere |
+  | `email` | string | **Sim** | E-mail válido |
+  | `password` | string | **Sim** | Min 6 caracteres |
+  | `role` | enum | Não | `admin` ou `agent` (default: `agent`) |
+  | `telegramChatId` | string | Não | Chat ID do Telegram |
+  | `maxConcurrent` | integer | Não | 1–50 (default: 10) |
+  | `notificationPreferences` | object | Não | Ver abaixo |
+
+  ### Estrutura de `notificationPreferences`
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `telegram` | boolean | Notificações via Telegram |
+  | `web_push` | boolean | Notificações web push |
+  | `sound` | boolean | Som nas notificações |
+
+  ## Resposta (201)
+
+  Retorna o agente criado com todos os campos.
+
+  ```json
+  {
+    "data": {
+      "id": "uuid",
+      "tenantId": "uuid",
+      "name": "Novo Agente",
+      "email": "novo@lojademo.com.br",
+      "role": "agent",
+      "isActive": true,
+      "isOnline": false,
+      "maxConcurrent": 10,
+      "activeConversations": 0,
+      "createdAt": "2026-02-22T10:00:00.000Z",
+      "updatedAt": "2026-02-22T10:00:00.000Z"
+    }
+  }
+  ```
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | Erro de validação (campos obrigatórios, email inválido, etc.) |
+  | `404` | Tenant não encontrado |
 }

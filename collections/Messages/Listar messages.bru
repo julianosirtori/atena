@@ -16,8 +16,92 @@ params:query {
 }
 
 docs {
-  Lista mensagens de uma conversa com paginação por cursor.
-  Mensagens retornadas em ordem cronológica (mais antiga primeiro).
-  Use o campo nextCursor do meta para buscar a próxima página.
-  Params: limit (1-100, default: 50), cursor (UUID da última mensagem).
+  # Listar messages
+
+  Retorna mensagens de uma conversa com **paginação por cursor**.
+  Mensagens ordenadas cronologicamente (mais antiga primeiro).
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `conversationId` | UUID | ID da conversa |
+
+  ## Query params
+
+  | Param | Tipo | Default | Descrição |
+  |-------|------|---------|-----------|
+  | `limit` | integer | `50` | Mensagens por página (1–100) |
+  | `cursor` | UUID | — | ID da mensagem para paginar (carrega mensagens anteriores) |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "conversationId": "uuid",
+        "direction": "inbound",
+        "senderType": "lead",
+        "senderAgentId": null,
+        "content": "Oi, quero saber dos produtos",
+        "contentType": "text",
+        "mediaUrl": null,
+        "aiMetadata": null,
+        "deliveryStatus": "delivered",
+        "externalId": "MSG-001",
+        "injectionFlags": [],
+        "validationResult": "valid",
+        "createdAt": "2026-02-14T15:30:00.000Z"
+      },
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "conversationId": "uuid",
+        "direction": "outbound",
+        "senderType": "ai",
+        "senderAgentId": null,
+        "content": "Olá! Como posso ajudar?",
+        "contentType": "text",
+        "mediaUrl": null,
+        "aiMetadata": {
+          "intent": "greeting",
+          "confidence": 95,
+          "tokens_used": 150
+        },
+        "deliveryStatus": "sent",
+        "externalId": null,
+        "injectionFlags": [],
+        "validationResult": "valid",
+        "createdAt": "2026-02-14T15:30:01.000Z"
+      }
+    ],
+    "meta": {
+      "nextCursor": "uuid-da-primeira-mensagem"
+    }
+  }
+  ```
+
+  ## Campos da mensagem
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `direction` | enum | `inbound` (lead → sistema) ou `outbound` (sistema → lead) |
+  | `senderType` | enum | `lead`, `ai`, `agent`, `system` |
+  | `senderAgentId` | UUID \| null | ID do agente (quando `senderType: "agent"`) |
+  | `contentType` | enum | `text`, `image`, `audio`, `video`, `document` |
+  | `mediaUrl` | string \| null | URL da mídia (imagens, áudios, etc.) |
+  | `aiMetadata` | object \| null | Metadados da IA (intent, confidence, tokens) |
+  | `deliveryStatus` | enum | `queued`, `sent`, `delivered`, `read`, `failed` |
+  | `injectionFlags` | string[] | Flags de tentativa de injeção detectada |
+  | `validationResult` | enum | `valid`, `blocked`, `modified` |
+
+  ## Paginação por cursor
+
+  - Se `meta.nextCursor` existir, há mais mensagens antigas
+  - Passe `cursor=<nextCursor>` para carregar a página anterior
+  - Quando `nextCursor` é `undefined`, não há mais mensagens
 }

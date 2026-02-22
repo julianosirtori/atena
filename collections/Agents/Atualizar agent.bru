@@ -19,7 +19,37 @@ body:json {
 }
 
 docs {
+  # Atualizar agent
+
   Atualiza dados de um agente. Todos os campos são opcionais.
-  Campos disponíveis: name, email, role, isActive,
-  telegramChatId, maxConcurrent, notificationPreferences.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `agentId` | UUID | ID do agente |
+
+  ## Body (todos opcionais)
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `name` | string | Min 1 caractere |
+  | `email` | string | E-mail válido |
+  | `role` | enum | `admin` ou `agent` |
+  | `isActive` | boolean | — |
+  | `telegramChatId` | string \| null | — |
+  | `maxConcurrent` | integer | 1–50 |
+  | `notificationPreferences` | object | `telegram`, `web_push`, `sound` |
+
+  ## Resposta (200)
+
+  Retorna o agente atualizado.
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | Erro de validação |
+  | `404` | Agente não encontrado |
 }

@@ -19,8 +19,35 @@ body:json {
 }
 
 docs {
+  # Atualizar lead
+
   Atualiza dados de um lead. Todos os campos são opcionais.
-  Campos disponíveis: name, email, stage
-  (new|qualifying|hot|human|converted|lost),
-  tags (array de strings), assignedTo (UUID ou null).
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `leadId` | UUID | ID do lead |
+
+  ## Body (todos opcionais)
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `name` | string | — |
+  | `email` | string | E-mail válido |
+  | `stage` | enum | `new`, `qualifying`, `hot`, `human`, `converted`, `lost` |
+  | `tags` | string[] | Array de strings |
+  | `assignedTo` | UUID \| null | UUID de um agente ou `null` para desatribuir |
+
+  ## Resposta (200)
+
+  Retorna o lead atualizado.
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | Erro de validação |
+  | `404` | Lead não encontrado |
 }

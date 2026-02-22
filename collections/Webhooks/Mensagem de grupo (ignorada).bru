@@ -27,6 +27,16 @@ body:json {
 }
 
 docs {
-  Mensagens de grupo são ignoradas pelo adapter.
-  Esperado: 200 { status: "ignored" }
+  # Webhook WhatsApp — Mensagem de grupo (ignorada)
+
+  Mensagens com `isGroup: true` são ignoradas pelo adapter.
+  O Atena só processa mensagens individuais.
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "status": "ignored"
+  }
+  ```
 }

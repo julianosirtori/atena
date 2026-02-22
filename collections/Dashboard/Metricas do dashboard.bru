@@ -11,8 +11,63 @@ get {
 }
 
 docs {
-  Retorna métricas agregadas para o dashboard do tenant.
-  Inclui: leadsToday, leadsMonth, leadsLimit, avgScore,
-  handoffRate (%), conversationsByStatus (ai, waiting_human,
-  human, closed) e topIntents (array com intent e count).
+  # Métricas do dashboard
+
+  Retorna métricas agregadas para o painel administrativo do tenant.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "leadsToday": 3,
+      "leadsMonth": 47,
+      "leadsLimit": 500,
+      "avgScore": 52,
+      "handoffRate": 18,
+      "conversationsByStatus": {
+        "ai": 12,
+        "waiting_human": 2,
+        "human": 1,
+        "closed": 85
+      },
+      "topIntents": [
+        { "intent": "product_inquiry", "count": 34 },
+        { "intent": "pricing", "count": 22 },
+        { "intent": "shipping", "count": 15 }
+      ]
+    }
+  }
+  ```
+
+  ## Campos da resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `leadsToday` | integer | Leads criados hoje |
+  | `leadsMonth` | integer | Leads do mês atual (da tabela `monthly_lead_counts`) |
+  | `leadsLimit` | integer | Limite de leads do plano do tenant |
+  | `avgScore` | integer | Score médio de todos os leads (arredondado) |
+  | `handoffRate` | integer | % de conversas com handoff nos últimos 30 dias (0–100) |
+  | `conversationsByStatus` | object | Contagem de conversas por status |
+  | `topIntents` | array | Top 10 intenções extraídas dos metadados da IA |
+
+  ### Cálculos
+
+  - **leadsToday**: `leads` criados desde 00:00 UTC de hoje
+  - **leadsMonth**: campo `leadCount` da tabela `monthly_lead_counts` para o mês atual
+  - **handoffRate**: `(conversas com handoffAt != null nos últimos 30 dias) / total × 100`
+  - **topIntents**: agrupamento de `messages.aiMetadata->>'intent'`, limitado a 10
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `404` | Tenant não encontrado |
 }

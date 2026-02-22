@@ -11,5 +11,24 @@ get {
 }
 
 docs {
+  # Buscar incidente por ID
+
   Retorna todos os dados de um incidente de segurança específico.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `incidentId` | UUID | ID do incidente |
+
+  ## Resposta (200)
+
+  Retorna o incidente com todos os campos (mesma estrutura da listagem).
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `404` | Incidente não encontrado |
 }

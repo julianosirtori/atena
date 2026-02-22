@@ -22,9 +22,71 @@ params:query {
 }
 
 docs {
-  Lista leads do tenant com paginação e filtros opcionais.
-  Filtros: stage (new|qualifying|hot|human|converted|lost),
-  channel (whatsapp|instagram), search (nome ou telefone),
-  minScore, maxScore, tags (separadas por vírgula).
-  Retorna { data: [...], meta: { total, page, limit, totalPages } }.
+  # Listar leads
+
+  Lista leads do tenant com paginação offset e filtros opcionais.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Query params
+
+  | Param | Tipo | Default | Descrição |
+  |-------|------|---------|-----------|
+  | `page` | integer | `1` | Página (mín: 1) |
+  | `limit` | integer | `20` | Itens por página (1–100) |
+  | `stage` | enum | — | `new`, `qualifying`, `hot`, `human`, `converted`, `lost` |
+  | `channel` | enum | — | `whatsapp`, `instagram` |
+  | `search` | string | — | Busca por nome ou telefone (ILIKE) |
+  | `minScore` | integer | — | Score mínimo |
+  | `maxScore` | integer | — | Score máximo |
+  | `tags` | string | — | Tags separadas por vírgula |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "name": "Maria Santos",
+        "phone": "5511999001001",
+        "instagramId": null,
+        "email": null,
+        "avatarUrl": null,
+        "channel": "whatsapp",
+        "source": null,
+        "utmSource": "facebook",
+        "utmMedium": "cpc",
+        "utmCampaign": "black-friday-2026",
+        "stage": "hot",
+        "score": 75,
+        "tags": ["interessada", "iphone"],
+        "assignedTo": null,
+        "lastCountedMonth": "2026-02",
+        "metadata": {},
+        "firstContactAt": "2026-02-14T15:30:00.000Z",
+        "lastContactAt": "2026-02-14T15:30:00.000Z",
+        "lastMessageAt": "2026-02-14T15:30:00.000Z",
+        "convertedAt": null,
+        "createdAt": "2026-02-14T15:30:00.000Z",
+        "updatedAt": "2026-02-14T15:30:00.000Z"
+      }
+    ],
+    "meta": {
+      "total": 5,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 1
+    }
+  }
+  ```
+
+  ## Paginação
+
+  Usa paginação offset. O objeto `meta` contém `total`, `page`, `limit` e `totalPages`.
 }

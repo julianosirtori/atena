@@ -27,6 +27,21 @@ body:json {
 }
 
 docs {
-  Simula o recebimento de um áudio do Z-API.
-  Esperado: 200 { status: "ok" }
+  # Webhook WhatsApp — Mensagem de áudio
+
+  Simula o recebimento de um áudio via Z-API.
+
+  ## Payload
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `audio.audioUrl` | string | URL do arquivo de áudio |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
 }

@@ -11,5 +11,24 @@ get {
 }
 
 docs {
+  # Buscar lead por ID
+
   Retorna todos os dados de um lead específico.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `leadId` | UUID | ID do lead |
+
+  ## Resposta (200)
+
+  Retorna o lead com todos os campos (mesma estrutura da listagem).
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `404` | Lead não encontrado |
 }

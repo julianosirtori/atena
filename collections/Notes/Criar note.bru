@@ -18,7 +18,42 @@ body:json {
 }
 
 docs {
+  # Criar note
+
   Cria uma nota interna na conversa.
-  Campos obrigatórios: agentId (UUID do agente), content (texto da nota).
-  Retorna 201 com a nota criada.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `conversationId` | UUID | ID da conversa |
+
+  ## Body
+
+  | Campo | Tipo | Obrigatório | Validação |
+  |-------|------|-------------|-----------|
+  | `agentId` | UUID | **Sim** | UUID válido de um agente |
+  | `content` | string | **Sim** | Min 1 caractere |
+
+  ## Resposta (201)
+
+  ```json
+  {
+    "data": {
+      "id": "uuid",
+      "tenantId": "uuid",
+      "conversationId": "uuid",
+      "agentId": "uuid",
+      "content": "Lead demonstrou interesse em garantia estendida. Acompanhar.",
+      "createdAt": "2026-02-22T10:00:00.000Z"
+    }
+  }
+  ```
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | Erro de validação (agentId ou content faltando) |
 }

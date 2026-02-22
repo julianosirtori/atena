@@ -11,5 +11,29 @@ get {
 }
 
 docs {
-  Verifica se a API está online. Retorna status e timestamp.
+  # Health Check
+
+  Verifica se a API está online e respondendo.
+
+  ## Resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `status` | string | Sempre `"ok"` |
+  | `timestamp` | string | Data/hora ISO 8601 |
+
+  ### Exemplo de resposta
+
+  ```json
+  {
+    "status": "ok",
+    "timestamp": "2026-02-22T10:30:45.123Z"
+  }
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | API online |
 }

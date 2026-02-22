@@ -11,7 +11,56 @@ get {
 }
 
 docs {
-  Retorna todos os dados de uma conversa específica,
-  incluindo contadores de mensagens, resumo da IA,
-  motivo de handoff e dados do lead.
+  # Buscar conversation por ID
+
+  Retorna todos os dados de uma conversa específica.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `conversationId` | UUID | ID da conversa |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "id": "uuid",
+      "tenantId": "uuid",
+      "leadId": "uuid",
+      "channel": "whatsapp",
+      "status": "waiting_human",
+      "assignedAgentId": "uuid",
+      "aiMessagesCount": 6,
+      "humanMessagesCount": 0,
+      "leadMessagesCount": 5,
+      "firstResponseTimeMs": 1100,
+      "aiModel": "claude-sonnet-4-20250514",
+      "aiSummary": "Lead quer Samsung mas tem dúvida sobre garantia estendida.",
+      "handoffReason": "Lead solicitou falar com atendente humano",
+      "handoffAt": "2026-02-14T16:40:00.000Z",
+      "openedAt": "2026-02-14T15:00:00.000Z",
+      "closedAt": null,
+      "createdAt": "2026-02-14T15:00:00.000Z",
+      "updatedAt": "2026-02-14T16:40:00.000Z"
+    }
+  }
+  ```
+
+  ## Campos adicionais (vs. listagem)
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `firstResponseTimeMs` | integer \| null | Tempo de primeira resposta (ms) |
+  | `aiModel` | string | Modelo de IA utilizado |
+  | `updatedAt` | timestamp | Última atualização |
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `404` | Conversa não encontrada |
 }

@@ -27,6 +27,15 @@ body:json {
 }
 
 docs {
-  Token presente mas que não corresponde a nenhum tenant.
-  Esperado: 404 { error: "Tenant not found" }
+  # Webhook WhatsApp — Token inválido (404)
+
+  Token presente no header mas não corresponde a nenhum tenant cadastrado.
+
+  ## Resposta (404)
+
+  ```json
+  {
+    "error": "Tenant not found"
+  }
+  ```
 }

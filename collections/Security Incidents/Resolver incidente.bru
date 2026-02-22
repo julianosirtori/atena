@@ -17,6 +17,44 @@ body:json {
 }
 
 docs {
-  Marca um incidente de segurança como resolvido.
-  Campo obrigatório: resolvedBy (UUID do agente que resolveu).
+  # Resolver incidente de segurança
+
+  Marca um incidente como resolvido, registrando qual agente o resolveu.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `incidentId` | UUID | ID do incidente |
+
+  ## Body
+
+  | Campo | Tipo | Obrigatório | Descrição |
+  |-------|------|-------------|-----------|
+  | `resolvedBy` | UUID | **Sim** | ID do agente que resolveu |
+
+  ## Resposta (200)
+
+  Retorna o incidente atualizado com `resolved: true`.
+
+  ```json
+  {
+    "data": {
+      "id": "uuid",
+      "incidentType": "injection_attempt",
+      "severity": "high",
+      "resolved": true,
+      "resolvedBy": "uuid-do-agente",
+      "createdAt": "2026-02-14T16:00:00.000Z"
+    }
+  }
+  ```
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | `resolvedBy` ausente ou inválido |
+  | `404` | Incidente não encontrado |
 }

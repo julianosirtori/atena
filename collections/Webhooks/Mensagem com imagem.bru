@@ -28,6 +28,22 @@ body:json {
 }
 
 docs {
-  Simula o recebimento de uma imagem do Z-API.
-  Esperado: 200 { status: "ok" }
+  # Webhook WhatsApp — Mensagem com imagem
+
+  Simula o recebimento de uma imagem via Z-API.
+
+  ## Payload
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `image.imageUrl` | string | URL da imagem |
+  | `image.caption` | string | Legenda da imagem (opcional) |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
 }

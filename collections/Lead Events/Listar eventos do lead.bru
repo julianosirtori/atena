@@ -15,8 +15,77 @@ params:query {
 }
 
 docs {
-  Lista eventos de um lead específico.
-  Filtro opcional: eventType (stage_change|score_change|assigned|
-  unassigned|tag_added|tag_removed|handoff|follow_up_sent|
-  converted|lost|reopened).
+  # Listar eventos do lead
+
+  Retorna o histórico de eventos de um lead específico em ordem cronológica.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `leadId` | UUID | ID do lead |
+
+  ## Query params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `eventType` | enum | Filtro por tipo de evento (ver lista abaixo) |
+
+  ### Tipos de evento
+
+  | Valor | Descrição |
+  |-------|-----------|
+  | `stage_change` | Mudança de estágio (new → qualifying → hot, etc.) |
+  | `score_change` | Alteração de pontuação |
+  | `assigned` | Lead atribuído a um agente |
+  | `unassigned` | Lead desatribuído |
+  | `tag_added` | Tag adicionada |
+  | `tag_removed` | Tag removida |
+  | `handoff` | Transferência para atendente humano |
+  | `follow_up_sent` | Follow-up automático enviado |
+  | `converted` | Lead convertido |
+  | `lost` | Lead perdido |
+  | `reopened` | Conversa reaberta |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "leadId": "uuid",
+        "eventType": "score_change",
+        "fromValue": "35",
+        "toValue": "75",
+        "createdBy": "ai",
+        "metadata": {},
+        "createdAt": "2026-02-14T15:35:00.000Z"
+      },
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "leadId": "uuid",
+        "eventType": "stage_change",
+        "fromValue": "qualifying",
+        "toValue": "hot",
+        "createdBy": "system",
+        "metadata": {},
+        "createdAt": "2026-02-14T15:35:00.000Z"
+      }
+    ]
+  }
+  ```
+
+  ## Campos da resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `eventType` | enum | Tipo do evento |
+  | `fromValue` | string \| null | Valor anterior |
+  | `toValue` | string \| null | Novo valor |
+  | `createdBy` | string | Quem disparou: `system`, `ai`, `agent:<uuid>` |
+  | `metadata` | object | Dados adicionais (ex: motivo do handoff) |
 }

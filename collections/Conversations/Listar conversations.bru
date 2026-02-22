@@ -18,9 +18,66 @@ params:query {
 }
 
 docs {
-  Lista conversas do tenant com paginação e filtros opcionais.
-  Filtros: status (ai|waiting_human|human|closed),
-  channel (whatsapp|instagram).
-  Inclui dados do lead (nome, telefone, score, stage).
-  Retorna { data: [...], meta: { total, page, limit, totalPages } }.
+  # Listar conversations
+
+  Lista conversas do tenant com paginação offset e filtros. Inclui dados resumidos do lead em cada conversa.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Query params
+
+  | Param | Tipo | Default | Descrição |
+  |-------|------|---------|-----------|
+  | `page` | integer | `1` | Página (mín: 1) |
+  | `limit` | integer | `20` | Itens por página (1–100) |
+  | `status` | enum | — | `ai`, `waiting_human`, `human`, `closed` |
+  | `channel` | enum | — | `whatsapp`, `instagram` |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "leadId": "uuid",
+        "channel": "whatsapp",
+        "status": "ai",
+        "assignedAgentId": null,
+        "aiMessagesCount": 8,
+        "humanMessagesCount": 0,
+        "leadMessagesCount": 6,
+        "aiSummary": "Lead interessada em iPhone 15 Pro Max.",
+        "handoffReason": null,
+        "handoffAt": null,
+        "openedAt": "2026-02-14T15:30:00.000Z",
+        "closedAt": null,
+        "createdAt": "2026-02-14T15:30:00.000Z",
+        "leadName": "Maria Santos",
+        "leadPhone": "5511999001001",
+        "leadScore": 75,
+        "leadStage": "hot"
+      }
+    ],
+    "meta": {
+      "total": 10,
+      "page": 1,
+      "limit": 20,
+      "totalPages": 1
+    }
+  }
+  ```
+
+  ## Campos extras (join com lead)
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `leadName` | string \| null | Nome do lead |
+  | `leadPhone` | string \| null | Telefone do lead |
+  | `leadScore` | integer | Score atual do lead |
+  | `leadStage` | enum | Estágio atual do lead |
 }

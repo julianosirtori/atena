@@ -11,6 +11,55 @@ get {
 }
 
 docs {
-  Lista todos os agentes do tenant.
-  Retorna nome, email, role, status online, capacidade e conversas ativas.
+  # Listar agents
+
+  Retorna todos os agentes do tenant.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "name": "Carlos Silva",
+        "email": "carlos@lojademo.com.br",
+        "role": "admin",
+        "isActive": true,
+        "isOnline": true,
+        "maxConcurrent": 10,
+        "activeConversations": 2,
+        "telegramChatId": "123456789",
+        "notificationPreferences": {
+          "telegram": true,
+          "web_push": true,
+          "sound": true
+        },
+        "createdAt": "2026-02-01T00:00:00.000Z"
+      }
+    ]
+  }
+  ```
+
+  ## Campos da resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `id` | UUID | ID do agente |
+  | `name` | string | Nome do agente |
+  | `email` | string | E-mail (único por tenant) |
+  | `role` | enum | `admin` ou `agent` |
+  | `isActive` | boolean | Se está ativo no sistema |
+  | `isOnline` | boolean | Se está online agora |
+  | `maxConcurrent` | integer | Máximo de conversas simultâneas |
+  | `activeConversations` | integer | Conversas ativas no momento |
+  | `telegramChatId` | string \| null | Chat ID para notificações Telegram |
+  | `notificationPreferences` | object | Preferências de notificação |
+  | `createdAt` | timestamp | Data de criação |
 }

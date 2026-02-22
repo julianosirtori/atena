@@ -11,6 +11,31 @@ get {
 }
 
 docs {
-  Lista todos os tenants cadastrados.
-  Retorna array com id, name, slug e plan.
+  # Listar tenants
+
+  Retorna todos os tenants cadastrados com dados resumidos.
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Loja Demo",
+        "slug": "loja-demo",
+        "plan": "pro"
+      }
+    ]
+  }
+  ```
+
+  ## Campos da resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `id` | UUID | Identificador único do tenant |
+  | `name` | string | Nome de exibição |
+  | `slug` | string | Identificador URL-friendly (único) |
+  | `plan` | enum | Plano: `starter`, `pro` ou `scale` |
 }

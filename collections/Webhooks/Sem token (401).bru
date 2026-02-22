@@ -23,6 +23,19 @@ body:json {
 }
 
 docs {
-  Sem header x-webhook-token.
-  Esperado: 401 Unauthorized
+  # Webhook WhatsApp — Sem token (401)
+
+  Requisição **sem** o header `x-webhook-token`.
+  A API rejeita com 401 Unauthorized.
+
+  ## Resposta (401)
+
+  ```json
+  {
+    "error": {
+      "code": "Unauthorized",
+      "message": "Missing x-webhook-token header"
+    }
+  }
+  ```
 }

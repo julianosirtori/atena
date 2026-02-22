@@ -11,6 +11,42 @@ get {
 }
 
 docs {
-  Retorna a contagem mensal de leads para faturamento.
-  Cada registro contém yearMonth (YYYY-MM) e leadCount.
+  # Contagem mensal de leads
+
+  Retorna o histórico de contagem de leads por mês para controle de faturamento.
+  Cada lead é contado **uma vez por mês** — mesmo telefone em meses diferentes = leads distintos.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "id": "uuid",
+        "tenantId": "uuid",
+        "yearMonth": "2026-02",
+        "leadCount": 5,
+        "notified80": false,
+        "notified100": false,
+        "createdAt": "2026-02-01T00:00:00.000Z",
+        "updatedAt": "2026-02-14T15:30:00.000Z"
+      }
+    ]
+  }
+  ```
+
+  ## Campos da resposta
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `yearMonth` | string | Mês no formato `YYYY-MM` |
+  | `leadCount` | integer | Quantidade de leads únicos no mês |
+  | `notified80` | boolean | Se notificação de 80% do limite foi enviada |
+  | `notified100` | boolean | Se notificação de 100% do limite foi enviada |
 }

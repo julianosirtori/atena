@@ -27,7 +27,53 @@ body:json {
 }
 
 docs {
-  Simula o recebimento de uma mensagem de texto do Z-API.
-  Cria lead, conversa, salva mensagem e enfileira job no BullMQ.
-  Esperado: 200 { status: "ok" }
+  # Webhook WhatsApp — Mensagem de texto
+
+  Simula o recebimento de uma mensagem de texto via Z-API.
+  Cria lead e conversa (se não existirem), salva a mensagem e enfileira job no BullMQ.
+
+  ## Headers
+
+  | Header | Obrigatório | Descrição |
+  |--------|-------------|-----------|
+  | `x-webhook-token` | **Sim** | Token do webhook cadastrado no tenant (`whatsappConfig.webhookSecret`) |
+
+  ## Payload Z-API
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `phone` | string | Telefone do remetente (DDI+DDD+número) |
+  | `messageId` | string | ID externo da mensagem no Z-API |
+  | `text.message` | string | Conteúdo da mensagem de texto |
+  | `momment` | string | Timestamp ISO 8601 do envio |
+  | `isGroup` | boolean | `true` = mensagem de grupo (ignorada) |
+
+  ## Respostas
+
+  ### Sucesso (200)
+
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
+
+  ### Mensagem ignorada (200)
+
+  Retornado quando `isGroup: true` ou mensagem sem conteúdo processável.
+
+  ```json
+  {
+    "status": "ignored"
+  }
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | Processado ou ignorado |
+  | `400` | Payload inválido |
+  | `401` | Header `x-webhook-token` ausente |
+  | `500` | Erro interno |
 }
