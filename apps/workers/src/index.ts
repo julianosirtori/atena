@@ -1,5 +1,16 @@
-// BullMQ workers entry point
-// Will be implemented in S-002+
+import { startMessageWorker } from './worker.js'
+import { logger } from './lib/logger.js'
 
-console.log('Workers starting...')
-console.log('No workers registered yet. Waiting for S-002 implementation.')
+const worker = startMessageWorker()
+
+process.on('SIGTERM', async () => {
+  logger.info('SIGTERM received, shutting down worker...')
+  await worker.close()
+  process.exit(0)
+})
+
+process.on('SIGINT', async () => {
+  logger.info('SIGINT received, shutting down worker...')
+  await worker.close()
+  process.exit(0)
+})
