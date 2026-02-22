@@ -31,5 +31,8 @@ coverage/
 # Drizzle
 drizzle/meta/
 
+# TypeScript build info
+*.tsbuildinfo
+
 # Turbo
 .turbo/
