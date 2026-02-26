@@ -208,6 +208,7 @@ Channels (WhatsApp/Instagram) → Fastify Webhooks → BullMQ Queue → AI Worke
 - Target >80% test coverage by MVP
 - Cross-package imports use `@atena/*` package names (e.g., `import { env } from '@atena/config'`)
 - **Always update Bruno collections** — Whenever adding, changing, or removing an API endpoint, the corresponding `.bru` files in `collections/` MUST be updated in the same commit. This includes creating new files, updating request bodies/params, and keeping environment variables current.
+- **Always update Linear issues** — After completing implementation of a feature or fix tracked in Linear, update the corresponding issue statuses to "Done" using the `linearis` CLI (`linearis issues update JS-XX --status "Done"`). This includes both parent issues and all sub-issues.
 
 ## API Collections (Bruno)
 
