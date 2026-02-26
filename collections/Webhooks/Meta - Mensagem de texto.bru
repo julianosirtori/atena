@@ -1,0 +1,110 @@
+meta {
+  name: Meta — Mensagem de texto
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-hub-signature-256: sha256=COMPUTE_HMAC_WITH_META_APP_SECRET
+}
+
+body:json {
+  {
+    "object": "whatsapp_business_account",
+    "entry": [
+      {
+        "id": "123456789",
+        "changes": [
+          {
+            "value": {
+              "messaging_product": "whatsapp",
+              "metadata": {
+                "display_phone_number": "15550001234",
+                "phone_number_id": "META_PHONE_NUMBER_ID"
+              },
+              "contacts": [
+                {
+                  "profile": { "name": "Lead Teste" },
+                  "wa_id": "5511999998888"
+                }
+              ],
+              "messages": [
+                {
+                  "from": "5511999998888",
+                  "id": "wamid.test001",
+                  "timestamp": "1708600000",
+                  "type": "text",
+                  "text": { "body": "Oi, quero saber dos produtos" }
+                }
+              ]
+            },
+            "field": "messages"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é ok", function() {
+    const body = res.getBody();
+    expect(body.status).to.equal("ok");
+  });
+}
+
+docs {
+  # Meta — Mensagem de texto
+
+  Simula o recebimento de uma mensagem de texto via Meta Cloud API (WhatsApp Business).
+  Requer assinatura HMAC válida no header `x-hub-signature-256`.
+
+  ## Headers
+
+  | Header | Obrigatório | Descrição |
+  |--------|-------------|-----------|
+  | `x-hub-signature-256` | **Sim** | HMAC SHA-256 do body usando `META_APP_SECRET` |
+
+  ## Payload Meta Cloud API
+
+  | Campo | Tipo | Descrição |
+  |-------|------|-----------|
+  | `object` | string | Sempre `whatsapp_business_account` |
+  | `entry[].changes[].value.metadata.phone_number_id` | string | ID do número de telefone (identifica o tenant) |
+  | `entry[].changes[].value.messages[].from` | string | Telefone do remetente |
+  | `entry[].changes[].value.messages[].text.body` | string | Conteúdo da mensagem |
+
+  ## Nota
+
+  O header `x-hub-signature-256` deve ser calculado manualmente:
+  `sha256=HMAC-SHA256(body, metaAppSecret)`
+
+  ## Respostas
+
+  ### Sucesso (200)
+
+  ```json
+  {
+    "status": "ok"
+  }
+  ```
+
+  ### HMAC inválido (401)
+
+  ```json
+  {
+    "error": "Unauthorized",
+    "message": "Invalid HMAC signature"
+  }
+  ```
+}

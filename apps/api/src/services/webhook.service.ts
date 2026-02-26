@@ -29,6 +29,21 @@ export async function findTenantByWebhookSecret(secret: string) {
   return rows[0] ?? null
 }
 
+export async function findTenantByPhoneNumberId(phoneNumberId: string) {
+  const rows = await db
+    .select({ id: tenants.id, whatsappProvider: tenants.whatsappProvider })
+    .from(tenants)
+    .where(
+      and(
+        sql`${tenants.whatsappConfig}->>'phoneNumberId' = ${phoneNumberId}`,
+        eq(tenants.whatsappProvider, 'meta_cloud'),
+      ),
+    )
+    .limit(1)
+
+  return rows[0] ?? null
+}
+
 export async function upsertLead(
   tenantId: string,
   phone: string,
@@ -130,6 +145,35 @@ export async function saveInboundMessage(
   return message
 }
 
+async function processInboundCommon(
+  tenantId: string,
+  inbound: InboundMessage,
+  correlationId?: string,
+) {
+  const lead = await upsertLead(tenantId, inbound.from, inbound.channel)
+
+  // Count lead for billing (never blocks message processing)
+  try {
+    await countLeadIfNew(tenantId, lead.id)
+  } catch {
+    // Billing failure must not block message processing
+  }
+
+  const conversation = await findOrCreateConversation(tenantId, lead.id, inbound.channel)
+  const message = await saveInboundMessage(tenantId, conversation.id, inbound, correlationId)
+
+  const queue = getMessageQueue()
+  await queue.add('process-message', {
+    tenantId,
+    leadId: lead.id,
+    conversationId: conversation.id,
+    messageId: message.id,
+    correlationId,
+  })
+
+  return { tenantId, leadId: lead.id, conversationId: conversation.id, messageId: message.id }
+}
+
 export async function processInboundWhatsApp(
   webhookToken: string,
   inbound: InboundMessage,
@@ -141,26 +185,19 @@ export async function processInboundWhatsApp(
     throw new WebhookError('Tenant not found', 404)
   }
 
-  const lead = await upsertLead(tenant.id, inbound.from, inbound.channel)
+  return processInboundCommon(tenant.id, inbound, correlationId)
+}
 
-  // Count lead for billing (never blocks message processing)
-  try {
-    await countLeadIfNew(tenant.id, lead.id)
-  } catch {
-    // Billing failure must not block message processing
+export async function processInboundMetaWhatsApp(
+  phoneNumberId: string,
+  inbound: InboundMessage,
+  correlationId?: string,
+) {
+  const tenant = await findTenantByPhoneNumberId(phoneNumberId)
+
+  if (!tenant) {
+    throw new WebhookError('Tenant not found', 404)
   }
 
-  const conversation = await findOrCreateConversation(tenant.id, lead.id, inbound.channel)
-  const message = await saveInboundMessage(tenant.id, conversation.id, inbound, correlationId)
-
-  const queue = getMessageQueue()
-  await queue.add('process-message', {
-    tenantId: tenant.id,
-    leadId: lead.id,
-    conversationId: conversation.id,
-    messageId: message.id,
-    correlationId,
-  })
-
-  return { tenantId: tenant.id, leadId: lead.id, conversationId: conversation.id, messageId: message.id }
+  return processInboundCommon(tenant.id, inbound, correlationId)
 }

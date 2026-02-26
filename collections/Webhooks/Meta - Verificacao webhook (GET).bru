@@ -1,0 +1,52 @@
+meta {
+  name: Meta — Verificação webhook (GET)
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token={{metaVerifyToken}}&hub.challenge=challenge_test_123
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("resposta é o challenge em text/plain", function() {
+    expect(res.getBody()).to.equal("challenge_test_123");
+  });
+}
+
+docs {
+  # Meta — Verificação de webhook (GET)
+
+  Simula a verificação de webhook da Meta Cloud API.
+  A Meta envia um GET com `hub.mode=subscribe`, `hub.verify_token` e `hub.challenge`.
+  Se o token for válido, retorna o challenge como `text/plain`.
+
+  ## Query Parameters
+
+  | Parâmetro | Obrigatório | Descrição |
+  |-----------|-------------|-----------|
+  | `hub.mode` | **Sim** | Deve ser `subscribe` |
+  | `hub.verify_token` | **Sim** | Token configurado no env `META_WHATSAPP_VERIFY_TOKEN` |
+  | `hub.challenge` | **Sim** | String de challenge que deve ser retornada |
+
+  ## Respostas
+
+  ### Sucesso (200)
+
+  Retorna o valor de `hub.challenge` como `text/plain`.
+
+  ### Token inválido (403)
+
+  ```json
+  {
+    "error": "Forbidden",
+    "message": "Invalid verify token"
+  }
+  ```
+}

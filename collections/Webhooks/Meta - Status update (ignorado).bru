@@ -1,0 +1,72 @@
+meta {
+  name: Meta — Status update (ignorado)
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-hub-signature-256: sha256=COMPUTE_HMAC_WITH_META_APP_SECRET
+}
+
+body:json {
+  {
+    "object": "whatsapp_business_account",
+    "entry": [
+      {
+        "id": "123456789",
+        "changes": [
+          {
+            "value": {
+              "messaging_product": "whatsapp",
+              "metadata": {
+                "display_phone_number": "15550001234",
+                "phone_number_id": "META_PHONE_NUMBER_ID"
+              },
+              "statuses": [
+                {
+                  "id": "wamid.status001",
+                  "status": "delivered",
+                  "timestamp": "1708600000",
+                  "recipient_id": "5511999998888"
+                }
+              ]
+            },
+            "field": "messages"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é ignored", function() {
+    const body = res.getBody();
+    expect(body.status).to.equal("ignored");
+  });
+}
+
+docs {
+  # Meta — Status update (ignorado)
+
+  Simula o recebimento de um status update (delivered, read, etc.) via Meta Cloud API.
+  Status updates não contêm mensagens e são ignorados pelo sistema.
+
+  ## Comportamento esperado
+
+  O sistema retorna `200` com `{ "status": "ignored" }` pois não há mensagem para processar.
+
+  ## Nota
+
+  O header `x-hub-signature-256` deve ser calculado manualmente com o `metaAppSecret`.
+}

@@ -1,0 +1,38 @@
+meta {
+  name: Meta — Verificação token errado (403)
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/webhooks/whatsapp?hub.mode=subscribe&hub.verify_token=wrong-token&hub.challenge=challenge_test_123
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 403", function() {
+    expect(res.getStatus()).to.equal(403);
+  });
+
+  test("erro é Forbidden", function() {
+    const body = res.getBody();
+    expect(body.error).to.equal("Forbidden");
+  });
+}
+
+docs {
+  # Meta — Verificação com token errado (403)
+
+  Simula a verificação de webhook da Meta com um `hub.verify_token` incorreto.
+  O sistema deve rejeitar com 403 Forbidden.
+
+  ## Comportamento esperado
+
+  ```json
+  {
+    "error": "Forbidden",
+    "message": "Invalid verify token"
+  }
+  ```
+}

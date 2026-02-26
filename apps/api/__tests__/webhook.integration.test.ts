@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { Queue } from 'bullmq'
@@ -7,9 +8,15 @@ process.env.DATABASE_URL = 'postgres://atena:atena_dev@postgres:5432/atena'
 process.env.REDIS_URL = 'redis://redis:6379'
 process.env.NODE_ENV = 'test'
 process.env.LOG_LEVEL = 'error'
+process.env.META_WHATSAPP_VERIFY_TOKEN = 'test-meta-verify-token'
+process.env.META_APP_SECRET = 'test-meta-app-secret'
 
 const WEBHOOK_SECRET = 'test-webhook-secret-integration'
 const TEST_PHONE = '5511988880001'
+const META_PHONE_NUMBER_ID = 'meta-phone-id-test-001'
+const META_TEST_PHONE = '5511977770001'
+const META_APP_SECRET = 'test-meta-app-secret'
+const META_VERIFY_TOKEN = 'test-meta-verify-token'
 
 function zapiPayload(phone: string, text: string, messageId?: string) {
   return {
@@ -21,7 +28,75 @@ function zapiPayload(phone: string, text: string, messageId?: string) {
   }
 }
 
-describe('POST /webhooks/whatsapp', () => {
+function metaTextPayload(phone: string, text: string, phoneNumberId: string, messageId?: string) {
+  return {
+    object: 'whatsapp_business_account',
+    entry: [
+      {
+        id: '123456789',
+        changes: [
+          {
+            value: {
+              messaging_product: 'whatsapp',
+              metadata: {
+                display_phone_number: '15550001234',
+                phone_number_id: phoneNumberId,
+              },
+              contacts: [{ profile: { name: 'Test Lead' }, wa_id: phone }],
+              messages: [
+                {
+                  from: phone,
+                  id: messageId ?? `wamid.${Date.now()}`,
+                  timestamp: String(Math.floor(Date.now() / 1000)),
+                  type: 'text',
+                  text: { body: text },
+                },
+              ],
+            },
+            field: 'messages',
+          },
+        ],
+      },
+    ],
+  }
+}
+
+function metaStatusPayload(phoneNumberId: string) {
+  return {
+    object: 'whatsapp_business_account',
+    entry: [
+      {
+        id: '123456789',
+        changes: [
+          {
+            value: {
+              messaging_product: 'whatsapp',
+              metadata: {
+                display_phone_number: '15550001234',
+                phone_number_id: phoneNumberId,
+              },
+              statuses: [
+                {
+                  id: 'wamid.status123',
+                  status: 'delivered',
+                  timestamp: String(Math.floor(Date.now() / 1000)),
+                  recipient_id: '5511999998888',
+                },
+              ],
+            },
+            field: 'messages',
+          },
+        ],
+      },
+    ],
+  }
+}
+
+function computeHmac(body: string, secret: string): string {
+  return 'sha256=' + crypto.createHmac('sha256', secret).update(body).digest('hex')
+}
+
+describe('POST /webhooks/whatsapp (Z-API)', () => {
   let server: FastifyInstance
   let tenantId: string
   let inspectQueue: Queue
@@ -170,7 +245,7 @@ describe('POST /webhooks/whatsapp', () => {
     expect(msgsAfter.length).toBe(msgCountBefore.length + 1)
   })
 
-  it('returns 401 when x-webhook-token header is missing', async () => {
+  it('returns 401 when no provider header is present', async () => {
     const payload = zapiPayload('5511988880002', 'Oi')
 
     const response = await server.inject({
@@ -290,5 +365,259 @@ describe('POST /webhooks/whatsapp', () => {
 
     expect(response.statusCode).toBe(200)
     expect(elapsed).toBeLessThan(100)
+  })
+})
+
+describe('Meta Cloud API Webhooks', () => {
+  let server: FastifyInstance
+  let metaTenantId: string
+  let inspectQueue: Queue
+
+  beforeAll(async () => {
+    const { db, tenants } = await import('@atena/database')
+    const { QUEUE_NAMES } = await import('@atena/config')
+
+    // Create test tenant with Meta Cloud provider
+    const [tenant] = await db
+      .insert(tenants)
+      .values({
+        name: 'Meta Webhook Test Tenant',
+        slug: `test-meta-webhook-${Date.now()}`,
+        businessName: 'Meta Test Business',
+        whatsappProvider: 'meta_cloud',
+        whatsappConfig: {
+          phoneNumberId: META_PHONE_NUMBER_ID,
+          token: 'meta-access-token',
+          appSecret: META_APP_SECRET,
+          verifyToken: META_VERIFY_TOKEN,
+        },
+      })
+      .returning()
+
+    metaTenantId = tenant.id
+
+    inspectQueue = new Queue(QUEUE_NAMES.PROCESS_MESSAGE, {
+      connection: { url: process.env.REDIS_URL },
+    })
+
+    await inspectQueue.drain()
+
+    const { buildServer } = await import('../src/server.js')
+    server = await buildServer()
+    await server.ready()
+  })
+
+  afterAll(async () => {
+    const { db, tenants, leads, conversations, messages } = await import('@atena/database')
+    const { eq } = await import('drizzle-orm')
+    const { closeQueues } = await import('../src/lib/queue.js')
+
+    await db.delete(messages).where(eq(messages.tenantId, metaTenantId))
+    await db.delete(conversations).where(eq(conversations.tenantId, metaTenantId))
+    await db.delete(leads).where(eq(leads.tenantId, metaTenantId))
+    await db.delete(tenants).where(eq(tenants.id, metaTenantId))
+
+    await inspectQueue.drain()
+    await inspectQueue.close()
+    await closeQueues()
+    await server.close()
+  })
+
+  describe('GET /webhooks/whatsapp (verification challenge)', () => {
+    it('returns 200 with challenge when verify_token is correct', async () => {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/webhooks/whatsapp',
+        query: {
+          'hub.mode': 'subscribe',
+          'hub.verify_token': META_VERIFY_TOKEN,
+          'hub.challenge': 'challenge_token_12345',
+        },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.headers['content-type']).toContain('text/plain')
+      expect(response.body).toBe('challenge_token_12345')
+    })
+
+    it('returns 403 when verify_token is wrong', async () => {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/webhooks/whatsapp',
+        query: {
+          'hub.mode': 'subscribe',
+          'hub.verify_token': 'wrong-token',
+          'hub.challenge': 'challenge_token_12345',
+        },
+      })
+
+      expect(response.statusCode).toBe(403)
+      expect(response.json().error).toBe('Forbidden')
+    })
+
+    it('returns 403 when hub.mode is not subscribe', async () => {
+      const response = await server.inject({
+        method: 'GET',
+        url: '/webhooks/whatsapp',
+        query: {
+          'hub.mode': 'unsubscribe',
+          'hub.verify_token': META_VERIFY_TOKEN,
+          'hub.challenge': 'challenge_token_12345',
+        },
+      })
+
+      expect(response.statusCode).toBe(403)
+    })
+  })
+
+  describe('POST /webhooks/whatsapp (Meta inbound)', () => {
+    it('returns 200 and creates lead, message, and enqueues job for valid Meta payload', async () => {
+      const payload = metaTextPayload(META_TEST_PHONE, 'Olá, vim pelo Instagram', META_PHONE_NUMBER_ID)
+      const body = JSON.stringify(payload)
+      const signature = computeHmac(body, META_APP_SECRET)
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/webhooks/whatsapp',
+        headers: {
+          'x-hub-signature-256': signature,
+          'content-type': 'application/json',
+        },
+        body,
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ status: 'ok' })
+
+      // Verify lead was created
+      const { db, leads } = await import('@atena/database')
+      const { and, eq } = await import('drizzle-orm')
+      const dbLeads = await db
+        .select()
+        .from(leads)
+        .where(and(eq(leads.tenantId, metaTenantId), eq(leads.phone, META_TEST_PHONE)))
+
+      expect(dbLeads).toHaveLength(1)
+      expect(dbLeads[0].channel).toBe('whatsapp')
+
+      // Verify message saved
+      const { messages } = await import('@atena/database')
+      const dbMessages = await db
+        .select()
+        .from(messages)
+        .where(eq(messages.tenantId, metaTenantId))
+
+      expect(dbMessages.length).toBeGreaterThanOrEqual(1)
+      const msg = dbMessages.find((m) => m.content === 'Olá, vim pelo Instagram')
+      expect(msg).toBeDefined()
+      expect(msg!.direction).toBe('inbound')
+      expect(msg!.senderType).toBe('lead')
+
+      // Verify BullMQ job enqueued
+      const jobs = await inspectQueue.getJobs(['waiting'])
+      const job = jobs.find((j) => j.data.tenantId === metaTenantId)
+      expect(job).toBeDefined()
+      expect(job!.data.leadId).toBe(dbLeads[0].id)
+    })
+
+    it('returns 401 when HMAC signature is invalid', async () => {
+      const payload = metaTextPayload(META_TEST_PHONE, 'Mensagem com HMAC errado', META_PHONE_NUMBER_ID)
+      const body = JSON.stringify(payload)
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/webhooks/whatsapp',
+        headers: {
+          'x-hub-signature-256': 'sha256=invalid_signature_here',
+          'content-type': 'application/json',
+        },
+        body,
+      })
+
+      expect(response.statusCode).toBe(401)
+      expect(response.json().error).toBe('Unauthorized')
+    })
+
+    it('returns 200 with ignored status for status update payloads', async () => {
+      const payload = metaStatusPayload(META_PHONE_NUMBER_ID)
+      const body = JSON.stringify(payload)
+      const signature = computeHmac(body, META_APP_SECRET)
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/webhooks/whatsapp',
+        headers: {
+          'x-hub-signature-256': signature,
+          'content-type': 'application/json',
+        },
+        body,
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({ status: 'ignored' })
+    })
+
+    it('returns 404 when phoneNumberId matches no tenant', async () => {
+      const payload = metaTextPayload(META_TEST_PHONE, 'Teste', 'unknown-phone-id')
+      const body = JSON.stringify(payload)
+      const signature = computeHmac(body, META_APP_SECRET)
+
+      const response = await server.inject({
+        method: 'POST',
+        url: '/webhooks/whatsapp',
+        headers: {
+          'x-hub-signature-256': signature,
+          'content-type': 'application/json',
+        },
+        body,
+      })
+
+      expect(response.statusCode).toBe(404)
+      expect(response.json().error).toBe('Tenant not found')
+    })
+
+    it('Z-API backward compatibility: Z-API payload with x-webhook-token still works', async () => {
+      // Create a Z-API tenant for this test
+      const { db, tenants } = await import('@atena/database')
+      const zapiSecret = `compat-test-${Date.now()}`
+
+      const [zapiTenant] = await db
+        .insert(tenants)
+        .values({
+          name: 'Z-API Compat Tenant',
+          slug: `test-zapi-compat-${Date.now()}`,
+          businessName: 'Compat Business',
+          whatsappProvider: 'zapi',
+          whatsappConfig: {
+            instanceId: 'compat-instance',
+            token: 'compat-token',
+            webhookSecret: zapiSecret,
+            phone: '5511900000099',
+          },
+        })
+        .returning()
+
+      try {
+        const payload = zapiPayload('5511988880099', 'Teste compatibilidade Z-API')
+
+        const response = await server.inject({
+          method: 'POST',
+          url: '/webhooks/whatsapp',
+          headers: { 'x-webhook-token': zapiSecret },
+          payload,
+        })
+
+        expect(response.statusCode).toBe(200)
+        expect(response.json()).toEqual({ status: 'ok' })
+      } finally {
+        // Clean up
+        const { eq } = await import('drizzle-orm')
+        const { leads, conversations, messages } = await import('@atena/database')
+        await db.delete(messages).where(eq(messages.tenantId, zapiTenant.id))
+        await db.delete(conversations).where(eq(conversations.tenantId, zapiTenant.id))
+        await db.delete(leads).where(eq(leads.tenantId, zapiTenant.id))
+        await db.delete(tenants).where(eq(tenants.id, zapiTenant.id))
+      }
+    })
   })
 })

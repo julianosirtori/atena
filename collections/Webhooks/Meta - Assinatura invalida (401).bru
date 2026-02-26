@@ -1,0 +1,80 @@
+meta {
+  name: Meta — Assinatura inválida (401)
+  type: http
+  seq: 12
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-hub-signature-256: sha256=invalid_hmac_signature_here
+}
+
+body:json {
+  {
+    "object": "whatsapp_business_account",
+    "entry": [
+      {
+        "id": "123456789",
+        "changes": [
+          {
+            "value": {
+              "messaging_product": "whatsapp",
+              "metadata": {
+                "display_phone_number": "15550001234",
+                "phone_number_id": "META_PHONE_NUMBER_ID"
+              },
+              "contacts": [
+                {
+                  "profile": { "name": "Lead Teste" },
+                  "wa_id": "5511999998888"
+                }
+              ],
+              "messages": [
+                {
+                  "from": "5511999998888",
+                  "id": "wamid.test002",
+                  "timestamp": "1708600000",
+                  "type": "text",
+                  "text": { "body": "Mensagem com HMAC errado" }
+                }
+              ]
+            },
+            "field": "messages"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+tests {
+  test("status code é 401", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+
+  test("erro é Unauthorized", function() {
+    const body = res.getBody();
+    expect(body.error).to.equal("Unauthorized");
+  });
+}
+
+docs {
+  # Meta — Assinatura inválida (401)
+
+  Simula o envio de uma mensagem Meta com assinatura HMAC inválida.
+  O sistema deve rejeitar a requisição com 401.
+
+  ## Comportamento esperado
+
+  ```json
+  {
+    "error": "Unauthorized",
+    "message": "Invalid HMAC signature"
+  }
+  ```
+}
