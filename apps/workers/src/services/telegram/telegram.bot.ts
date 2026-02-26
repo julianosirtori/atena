@@ -4,6 +4,7 @@ import { db } from '@atena/database'
 import { agents, conversations, messages } from '@atena/database'
 import { eq, and } from 'drizzle-orm'
 import { env } from '@atena/config'
+import { withRetry } from '@atena/shared'
 import { assignToAgent, returnToAI } from '../handoff.service.js'
 import { logger } from '../../lib/logger.js'
 import type { AgentForNotification, ReplyModeState } from './telegram.types.js'
@@ -347,9 +348,19 @@ export class TelegramBotService {
 
     for (const agent of eligible) {
       try {
-        await this.bot.api.sendMessage(agent.telegramChatId!, text, {
-          reply_markup: keyboard,
-        })
+        await withRetry(
+          () =>
+            this.bot.api.sendMessage(agent.telegramChatId!, text, {
+              reply_markup: keyboard,
+            }),
+          {
+            maxRetries: 2,
+            baseDelay: 500,
+            onRetry: (error, attempt, delayMs) => {
+              logger.warn({ error, agentId: agent.id, attempt, delayMs }, 'Telegram send retry')
+            },
+          },
+        )
       } catch (error) {
         logger.error({ error, agentId: agent.id }, 'Failed to send Telegram notification')
       }

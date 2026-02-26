@@ -106,6 +106,7 @@ export async function saveInboundMessage(
   tenantId: string,
   conversationId: string,
   inbound: InboundMessage,
+  correlationId?: string,
 ) {
   const contentType =
     inbound.mediaType ?? ('text' as const)
@@ -122,6 +123,7 @@ export async function saveInboundMessage(
       mediaUrl: inbound.mediaUrl,
       externalId: inbound.externalId,
       deliveryStatus: 'delivered',
+      correlationId,
     })
     .returning({ id: messages.id })
 
@@ -131,6 +133,7 @@ export async function saveInboundMessage(
 export async function processInboundWhatsApp(
   webhookToken: string,
   inbound: InboundMessage,
+  correlationId?: string,
 ) {
   const tenant = await findTenantByWebhookSecret(webhookToken)
 
@@ -148,7 +151,7 @@ export async function processInboundWhatsApp(
   }
 
   const conversation = await findOrCreateConversation(tenant.id, lead.id, inbound.channel)
-  const message = await saveInboundMessage(tenant.id, conversation.id, inbound)
+  const message = await saveInboundMessage(tenant.id, conversation.id, inbound, correlationId)
 
   const queue = getMessageQueue()
   await queue.add('process-message', {
@@ -156,6 +159,7 @@ export async function processInboundWhatsApp(
     leadId: lead.id,
     conversationId: conversation.id,
     messageId: message.id,
+    correlationId,
   })
 
   return { tenantId: tenant.id, leadId: lead.id, conversationId: conversation.id, messageId: message.id }

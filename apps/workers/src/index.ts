@@ -6,11 +6,17 @@ import { TelegramBotService } from './services/telegram/telegram.bot.js'
 import { logger } from './lib/logger.js'
 
 // Create queues and wire them into the handoff service
-const { notificationQueue, scheduledQueue } = createQueues()
+const {
+  notificationQueue,
+  scheduledQueue,
+  processMessageDlq,
+  sendNotificationDlq,
+  scheduledDlq,
+} = createQueues()
 
 // Start workers
-const messageWorker = startMessageWorker()
-const scheduledWorker = startScheduledWorker()
+const messageWorker = startMessageWorker(processMessageDlq, notificationQueue)
+const scheduledWorker = startScheduledWorker(scheduledDlq)
 
 // Conditionally start Telegram bot
 let telegramBot: TelegramBotService | null = null
@@ -24,7 +30,7 @@ if (env.TELEGRAM_BOT_TOKEN) {
 }
 
 // Start notification worker (works with or without Telegram bot)
-const notificationWorker = startNotificationWorker(telegramBot)
+const notificationWorker = startNotificationWorker(telegramBot, sendNotificationDlq)
 
 async function shutdown() {
   logger.info('Shutting down workers...')
@@ -34,6 +40,9 @@ async function shutdown() {
     notificationWorker.close(),
     notificationQueue.close(),
     scheduledQueue.close(),
+    processMessageDlq.close(),
+    sendNotificationDlq.close(),
+    scheduledDlq.close(),
     telegramBot?.stop(),
   ])
   process.exit(0)

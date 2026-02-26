@@ -48,6 +48,8 @@ export const envSchema = z.object({
 
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   PANEL_URL: z.string().url().optional().default('http://localhost:5173'),
+
+  ADMIN_TOKEN: z.string().optional(),
 })
 
 export type Env = z.infer<typeof envSchema>

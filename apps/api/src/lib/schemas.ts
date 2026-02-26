@@ -11,6 +11,7 @@ export const tenantUpdateSchema = z.object({
   businessHours: z.string().optional(),
   paymentMethods: z.string().optional(),
   customInstructions: z.string().optional(),
+  fallbackMessage: z.string().optional(),
   plan: z.enum(['starter', 'pro', 'scale']).optional(),
   leadsLimit: z.number().int().positive().optional(),
   agentsLimit: z.number().int().positive().optional(),

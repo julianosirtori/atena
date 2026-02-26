@@ -4,12 +4,15 @@ import { eq, and, desc } from 'drizzle-orm'
 import { MockAdapter, ZApiAdapter, MetaWhatsAppAdapter } from '@atena/channels'
 import type { ChannelAdapter } from '@atena/channels'
 import type { TenantForPrompt, LeadForPrompt, MessageForPrompt, HandoffDecision } from '@atena/shared'
+import { withRetry, CircuitBreakerOpenError } from '@atena/shared'
+import type { Queue } from 'bullmq'
 import { sanitizeInput } from './prompt.guard.js'
 import { buildSystemPrompt, buildUserPrompt } from './prompt.builder.js'
 import { parseAIResponse } from './response.parser.js'
 import { validateResponse } from './response.validator.js'
 import { updateScore, shouldAutoHandoff } from './scoring.service.js'
-import { logSanitizationIncident, logValidationIncident } from './security-incident.service.js'
+import { logSanitizationIncident, logValidationIncident, logAIFailureIncident } from './security-incident.service.js'
+import { classifyAIError } from '../lib/ai-error.classifier.js'
 import { triggerHandoff } from './handoff.service.js'
 import type { AIService } from './ai.service.js'
 import { logger } from '../lib/logger.js'
@@ -19,6 +22,7 @@ export interface ProcessMessageJob {
   leadId: string
   conversationId: string
   messageId: string
+  correlationId?: string
 }
 
 const GENERIC_FALLBACK_MSG =
@@ -84,8 +88,9 @@ function toLeadForPrompt(lead: typeof leads.$inferSelect): LeadForPrompt {
 export async function processMessage(
   job: ProcessMessageJob,
   aiService: AIService,
+  notificationQueue?: Queue,
 ): Promise<void> {
-  const log = logger.child({ tenantId: job.tenantId, leadId: job.leadId, conversationId: job.conversationId })
+  const log = logger.child({ tenantId: job.tenantId, leadId: job.leadId, conversationId: job.conversationId, correlationId: job.correlationId })
 
   // 1. Load entities
   const [tenant] = await db
@@ -213,16 +218,41 @@ export async function processMessage(
     rawText = aiResult.rawText
     tokensUsed = aiResult.tokensUsed
   } catch (error) {
-    log.error({ error }, 'AI call failed, using fallback')
-    // Fallback: generic message + handoff
-    await saveOutboundMessage(job, GENERIC_FALLBACK_MSG, 'ai', { intent: 'other', confidence: 0, tokens_used: 0 })
+    const isCircuitOpen = error instanceof CircuitBreakerOpenError
+    const classified = isCircuitOpen
+      ? { category: 'circuit_breaker_open' as const, retryable: false }
+      : classifyAIError(error)
+
+    log.error(
+      { error, errorCategory: classified.category, isCircuitOpen },
+      'AI call failed, using fallback',
+    )
+
+    const fallbackMsg = tenant.fallbackMessage ?? GENERIC_FALLBACK_MSG
+
+    await saveOutboundMessage(job, fallbackMsg, 'ai', {
+      intent: 'other',
+      confidence: 0,
+      tokens_used: 0,
+      error_category: classified.category,
+    })
+
+    await logAIFailureIncident(
+      job.tenantId,
+      job.conversationId,
+      job.leadId,
+      classified.category,
+      error instanceof Error ? error.message : String(error),
+    )
+
     await triggerHandoff({
       tenantId: job.tenantId,
       conversationId: job.conversationId,
       leadId: job.leadId,
-      reason: 'AI service failure',
+      reason: `AI service failure: ${classified.category}`,
       handoffRules: tenant.handoffRules,
     })
+
     return
   }
 
@@ -312,7 +342,13 @@ export async function processMessage(
   const adapter = resolveChannelAdapter(tenant)
   if (lead.phone) {
     try {
-      await adapter.sendMessage(lead.phone, responseToSend)
+      await withRetry(() => adapter.sendMessage(lead.phone!, responseToSend), {
+        maxRetries: 2,
+        baseDelay: 500,
+        onRetry: (error, attempt, delayMs) => {
+          log.warn({ error, attempt, delayMs }, 'Channel send retry')
+        },
+      })
       log.info('Outbound message sent via channel')
     } catch (error) {
       log.error({ error }, 'Failed to send via channel adapter')
@@ -423,6 +459,7 @@ async function saveOutboundMessage(
     contentType: 'text',
     aiMetadata,
     deliveryStatus: 'queued',
+    correlationId: job.correlationId,
   })
 }
 

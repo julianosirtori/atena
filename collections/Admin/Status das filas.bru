@@ -1,0 +1,68 @@
+meta {
+  name: Status das filas
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/queues/status
+  body: none
+  auth: none
+}
+
+headers {
+  X-Admin-Token: {{adminToken}}
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data contém filas", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("data");
+    expect(body.data).to.be.an("object");
+  });
+}
+
+docs {
+  # Status das filas
+
+  Retorna a contagem de jobs por fila e status (active, completed, delayed, failed, paused, waiting).
+
+  ## Headers
+
+  | Header | Tipo | Obrigatório | Descrição |
+  |--------|------|-------------|-----------|
+  | `X-Admin-Token` | string | Sim | Token de admin configurado no .env |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "process-message": {
+        "active": 0,
+        "completed": 150,
+        "delayed": 0,
+        "failed": 2,
+        "paused": 0,
+        "waiting": 3
+      },
+      "send-notification": { ... },
+      "scheduled": { ... },
+      "process-message-dlq": { ... },
+      "send-notification-dlq": { ... },
+      "scheduled-dlq": { ... }
+    }
+  }
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | Sucesso |
+  | `401` | Token inválido ou ausente |
+}

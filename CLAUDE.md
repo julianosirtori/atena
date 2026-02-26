@@ -207,6 +207,7 @@ Channels (WhatsApp/Instagram) → Fastify Webhooks → BullMQ Queue → AI Worke
 - ESM throughout (`"type": "module"`, `.js` extensions in source imports)
 - Target >80% test coverage by MVP
 - Cross-package imports use `@atena/*` package names (e.g., `import { env } from '@atena/config'`)
+- **Always update Bruno collections** — Whenever adding, changing, or removing an API endpoint, the corresponding `.bru` files in `collections/` MUST be updated in the same commit. This includes creating new files, updating request bodies/params, and keeping environment variables current.
 
 ## API Collections (Bruno)
 
@@ -238,7 +239,8 @@ collections/
 ├── Lead Events/                        # /api/v1/tenants/:tenantId/events
 ├── Security Incidents/                 # /api/v1/tenants/:tenantId/security-incidents
 ├── Billing/                            # /api/v1/tenants/:tenantId/billing
-└── Dashboard/                          # /api/v1/tenants/:tenantId/dashboard
+├── Dashboard/                          # /api/v1/tenants/:tenantId/dashboard
+└── Admin/                              # /api/v1/admin (DLQ, queue status — X-Admin-Token)
 ```
 
 ### Bruno file conventions

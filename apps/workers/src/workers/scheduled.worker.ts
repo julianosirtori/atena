@@ -1,6 +1,7 @@
-import { Worker } from 'bullmq'
+import { Worker, Queue } from 'bullmq'
 import { env, QUEUE_NAMES } from '@atena/config'
 import { handleTimeout } from '../services/handoff.service.js'
+import { moveToDlq } from '../lib/dlq.js'
 import { logger } from '../lib/logger.js'
 
 interface HandoffTimeoutJob {
@@ -8,7 +9,7 @@ interface HandoffTimeoutJob {
   tenantId: string
 }
 
-export function startScheduledWorker(): Worker {
+export function startScheduledWorker(dlqQueue?: Queue): Worker {
   const worker = new Worker<HandoffTimeoutJob>(
     QUEUE_NAMES.SCHEDULED,
     async (job) => {
@@ -34,8 +35,12 @@ export function startScheduledWorker(): Worker {
     logger.info({ jobId: job.id }, 'Scheduled job completed')
   })
 
-  worker.on('failed', (job, error) => {
+  worker.on('failed', async (job, error) => {
     logger.error({ jobId: job?.id, error: error.message }, 'Scheduled job failed')
+
+    if (dlqQueue && job && job.attemptsMade >= (job.opts?.attempts ?? 3)) {
+      await moveToDlq(dlqQueue, job, error.message)
+    }
   })
 
   worker.on('error', (error) => {

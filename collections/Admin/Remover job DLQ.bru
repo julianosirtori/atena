@@ -1,0 +1,78 @@
+meta {
+  name: Remover job DLQ
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/admin/dlq/:jobId?queue=process-message-dlq
+  body: none
+  auth: none
+}
+
+params:query {
+  queue: process-message-dlq
+}
+
+params:path {
+  jobId: 1
+}
+
+headers {
+  X-Admin-Token: {{adminToken}}
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é removed", function() {
+    const body = res.getBody();
+    expect(body.data.status).to.equal("removed");
+  });
+}
+
+docs {
+  # Remover job da DLQ
+
+  Remove permanentemente um job da Dead Letter Queue.
+
+  ## Headers
+
+  | Header | Tipo | Obrigatório | Descrição |
+  |--------|------|-------------|-----------|
+  | `X-Admin-Token` | string | Sim | Token de admin |
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `jobId` | string | ID do job na DLQ |
+
+  ## Query params
+
+  | Param | Tipo | Obrigatório | Descrição |
+  |-------|------|-------------|-----------|
+  | `queue` | string | Sim | Nome da DLQ: `process-message-dlq`, `send-notification-dlq`, `scheduled-dlq` |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "status": "removed",
+      "jobId": "123"
+    }
+  }
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | Job removido |
+  | `400` | Fila inválida |
+  | `401` | Token inválido ou ausente |
+  | `404` | Job não encontrado |
+}

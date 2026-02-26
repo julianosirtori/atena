@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { FastifyPluginAsync } from 'fastify'
 import { ZApiAdapter } from '@atena/channels'
 import { processInboundWhatsApp, WebhookError } from '../../services/webhook.service.js'
@@ -10,6 +11,9 @@ const adapter = new ZApiAdapter({
 
 export const whatsappWebhookRoute: FastifyPluginAsync = async (server) => {
   server.post('/webhooks/whatsapp', async (request, reply) => {
+    const correlationId = randomUUID()
+    reply.header('X-Correlation-ID', correlationId)
+
     if (!request.body || typeof request.body !== 'object') {
       return reply.status(400).send({ error: 'Bad Request', message: 'Request body is required' })
     }
@@ -25,7 +29,7 @@ export const whatsappWebhookRoute: FastifyPluginAsync = async (server) => {
     }
 
     try {
-      await processInboundWhatsApp(webhookToken, inbound)
+      await processInboundWhatsApp(webhookToken, inbound, correlationId)
       return reply.status(200).send({ status: 'ok' })
     } catch (err) {
       if (err instanceof WebhookError) {

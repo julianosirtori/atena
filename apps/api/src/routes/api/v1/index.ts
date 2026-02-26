@@ -9,6 +9,7 @@ import { leadEventsRoutes } from './lead-events.js'
 import { securityIncidentsRoutes } from './security-incidents.js'
 import { billingRoutes } from './billing.js'
 import { dashboardRoutes } from './dashboard.js'
+import { adminRoutes } from './admin.js'
 
 export const v1Routes: FastifyPluginAsync = async (server) => {
   await server.register(tenantsRoutes)
@@ -21,4 +22,5 @@ export const v1Routes: FastifyPluginAsync = async (server) => {
   await server.register(securityIncidentsRoutes)
   await server.register(billingRoutes)
   await server.register(dashboardRoutes)
+  await server.register(adminRoutes)
 }

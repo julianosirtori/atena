@@ -1,0 +1,81 @@
+meta {
+  name: Reprocessar job DLQ
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/admin/dlq/:jobId/retry
+  body: json
+  auth: none
+}
+
+params:path {
+  jobId: 1
+}
+
+headers {
+  X-Admin-Token: {{adminToken}}
+}
+
+body:json {
+  {
+    "queue": "process-message-dlq"
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é retried", function() {
+    const body = res.getBody();
+    expect(body.data.status).to.equal("retried");
+  });
+}
+
+docs {
+  # Reprocessar job da DLQ
+
+  Reenfileira um job da DLQ para reprocessamento na fila original.
+
+  ## Headers
+
+  | Header | Tipo | Obrigatório | Descrição |
+  |--------|------|-------------|-----------|
+  | `X-Admin-Token` | string | Sim | Token de admin |
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `jobId` | string | ID do job na DLQ |
+
+  ## Body
+
+  | Campo | Tipo | Obrigatório | Descrição |
+  |-------|------|-------------|-----------|
+  | `queue` | string | Sim | Nome da DLQ: `process-message-dlq`, `send-notification-dlq`, `scheduled-dlq` |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "status": "retried",
+      "jobId": "123",
+      "sourceQueue": "process-message"
+    }
+  }
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | Job reenfileirado |
+  | `400` | Fila inválida ou dados incompletos |
+  | `401` | Token inválido ou ausente |
+  | `404` | Job não encontrado |
+}

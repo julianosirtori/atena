@@ -74,6 +74,30 @@ export async function logSanitizationIncident(
   }
 }
 
+export async function logAIFailureIncident(
+  tenantId: string,
+  conversationId: string,
+  leadId: string,
+  errorCategory: string,
+  errorMessage: string,
+): Promise<void> {
+  try {
+    await db.insert(securityIncidents).values({
+      tenantId,
+      conversationId,
+      leadId,
+      incidentType: 'validation_failed',
+      severity: 'medium',
+      leadMessage: `AI failure: ${errorCategory}`,
+      aiResponse: errorMessage,
+      detectionLayer: 'validation',
+      actionTaken: 'generic_response',
+    })
+  } catch (error) {
+    logger.error({ error, tenantId, conversationId }, 'Failed to log AI failure incident')
+  }
+}
+
 export async function logValidationIncident(
   tenantId: string,
   conversationId: string,

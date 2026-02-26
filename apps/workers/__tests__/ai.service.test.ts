@@ -29,9 +29,11 @@ vi.mock('../src/lib/logger.js', () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn(),
+    warn: vi.fn(),
     child: vi.fn(() => ({
       info: vi.fn(),
       error: vi.fn(),
+      warn: vi.fn(),
     })),
   },
 }))
@@ -91,10 +93,12 @@ describe('createAIService', () => {
   })
 
   it('propagates errors from model.invoke', async () => {
-    mockInvoke.mockRejectedValue(new Error('API rate limit exceeded'))
+    const authError = new Error('Unauthorized')
+    ;(authError as any).status = 401
+    mockInvoke.mockRejectedValue(authError)
 
     const service = createAIService()
-    await expect(service.call('system', 'user')).rejects.toThrow('API rate limit exceeded')
+    await expect(service.call('system', 'user')).rejects.toThrow('Unauthorized')
   })
 
   it('converts non-string content to JSON string', async () => {

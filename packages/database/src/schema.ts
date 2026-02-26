@@ -190,6 +190,7 @@ export const tenants = pgTable(
     businessHours: text('business_hours'),
     paymentMethods: text('payment_methods'),
     customInstructions: text('custom_instructions'),
+    fallbackMessage: text('fallback_message'),
 
     whatsappProvider: whatsappProviderEnum('whatsapp_provider').default('zapi'),
     whatsappConfig: jsonb('whatsapp_config').default({}),
@@ -418,11 +419,16 @@ export const messages = pgTable(
       'valid',
     ),
 
+    correlationId: text('correlation_id'),
+
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (t) => [
     index('idx_messages_conversation').on(t.conversationId, t.createdAt),
     index('idx_messages_tenant').on(t.tenantId),
+    index('idx_messages_correlation_id')
+      .on(t.correlationId)
+      .where(sql`correlation_id IS NOT NULL`),
   ],
 )
 

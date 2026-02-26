@@ -79,9 +79,11 @@ vi.mock('../src/lib/logger.js', () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn(),
+    warn: vi.fn(),
     child: vi.fn(() => ({
       info: vi.fn(),
       error: vi.fn(),
+      warn: vi.fn(),
     })),
   },
 }))
@@ -89,6 +91,7 @@ vi.mock('../src/lib/logger.js', () => ({
 vi.mock('../src/services/security-incident.service.js', () => ({
   logSanitizationIncident: vi.fn().mockResolvedValue(undefined),
   logValidationIncident: vi.fn().mockResolvedValue(undefined),
+  logAIFailureIncident: vi.fn().mockResolvedValue(undefined),
 }))
 
 vi.mock('../src/services/handoff.service.js', () => ({
@@ -113,6 +116,7 @@ const mockTenant = {
   businessHours: 'Seg-Sex 9h-18h',
   paymentMethods: 'PIX, cartão',
   customInstructions: null,
+  fallbackMessage: null,
   whatsappProvider: 'zapi',
   whatsappConfig: { instanceId: 'mock' },
   instagramConfig: {},

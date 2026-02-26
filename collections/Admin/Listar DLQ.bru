@@ -1,0 +1,79 @@
+meta {
+  name: Listar DLQ
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/admin/dlq?limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 20
+  ~queue: process-message-dlq
+}
+
+headers {
+  X-Admin-Token: {{adminToken}}
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+}
+
+docs {
+  # Listar jobs da DLQ
+
+  Lista jobs que falharam permanentemente e foram movidos para a Dead Letter Queue.
+
+  ## Headers
+
+  | Header | Tipo | Obrigatório | Descrição |
+  |--------|------|-------------|-----------|
+  | `X-Admin-Token` | string | Sim | Token de admin |
+
+  ## Query params
+
+  | Param | Tipo | Default | Descrição |
+  |-------|------|---------|-----------|
+  | `queue` | string | — | Filtrar por DLQ específica: `process-message-dlq`, `send-notification-dlq`, `scheduled-dlq` |
+  | `limit` | integer | `20` | Máximo de jobs retornados (1–100) |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [
+      {
+        "jobId": "123",
+        "queue": "process-message-dlq",
+        "data": {
+          "originalJobId": "456",
+          "sourceQueue": "process-message",
+          "data": { "tenantId": "...", "leadId": "...", "conversationId": "...", "messageId": "..." },
+          "failedAt": "2026-02-26T10:00:00.000Z",
+          "error": "AI service timeout"
+        },
+        "failedOn": 1740564000000
+      }
+    ]
+  }
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | Sucesso |
+  | `400` | Nome de fila inválido |
+  | `401` | Token inválido ou ausente |
+}
