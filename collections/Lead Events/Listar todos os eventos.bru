@@ -16,6 +16,17 @@ params:query {
   ~eventType: handoff
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+}
+
 docs {
   # Listar todos os eventos do tenant
 
@@ -37,6 +48,8 @@ docs {
 
   ## Resposta (200)
 
+  Nota: a rota aceita `page` e `limit` para offset/limit da query, mas não retorna metadados de paginação (`total`, `totalPages`).
+
   ```json
   {
     "data": [
@@ -53,11 +66,7 @@ docs {
         },
         "createdAt": "2026-02-14T16:40:00.000Z"
       }
-    ],
-    "meta": {
-      "page": 1,
-      "limit": 20
-    }
+    ]
   }
   ```
 }

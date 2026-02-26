@@ -1,0 +1,53 @@
+meta {
+  name: 02 — Criar agent de teste
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Agente Teste Fluxo",
+    "email": "teste-fluxo@lojademo.com.br",
+    "password": "senha123",
+    "role": "agent",
+    "maxConcurrent": 5
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.data && body.data.id) {
+    bru.setEnvVar("testAgentId", body.data.id);
+  }
+}
+
+tests {
+  test("status code é 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("agent criado com sucesso", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.name).to.equal("Agente Teste Fluxo");
+  });
+
+  test("testAgentId salvo no ambiente", function() {
+    const body = res.getBody();
+    expect(body.data.id).to.be.a("string");
+  });
+}
+
+docs {
+  # Fluxo Completo — 02 Criar agent de teste
+
+  **Passo 2/9** — Cria um agent de teste e salva `testAgentId`.
+
+  Este agent será removido no passo 09 (cleanup).
+}

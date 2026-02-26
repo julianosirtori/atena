@@ -1,7 +1,7 @@
 meta {
-  name: WhatsApp — Mensagem com imagem
+  name: WhatsApp — Mensagem com vídeo
   type: http
-  seq: 2
+  seq: 7
 }
 
 post {
@@ -17,12 +17,12 @@ headers {
 body:json {
   {
     "phone": "5511999998888",
-    "messageId": "MSG-002",
-    "image": {
-      "imageUrl": "https://example.com/foto.jpg",
-      "caption": "Foto do produto"
+    "messageId": "MSG-007",
+    "video": {
+      "videoUrl": "https://example.com/video.mp4",
+      "caption": "Vídeo do produto em funcionamento"
     },
-    "momment": "2026-02-22T10:01:00Z",
+    "momment": "2026-02-22T10:06:00Z",
     "isGroup": false
   }
 }
@@ -39,16 +39,16 @@ tests {
 }
 
 docs {
-  # Webhook WhatsApp — Mensagem com imagem
+  # Webhook WhatsApp — Mensagem com vídeo
 
-  Simula o recebimento de uma imagem via Z-API.
+  Simula o recebimento de um vídeo via Z-API.
 
   ## Payload
 
   | Campo | Tipo | Descrição |
   |-------|------|-----------|
-  | `image.imageUrl` | string | URL da imagem |
-  | `image.caption` | string | Legenda da imagem (opcional) |
+  | `video.videoUrl` | string | URL do vídeo |
+  | `video.caption` | string | Legenda do vídeo (opcional) |
 
   ## Resposta (200)
 

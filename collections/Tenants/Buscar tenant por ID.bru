@@ -10,6 +10,26 @@ get {
   auth: none
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data.id é string (UUID)", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.id).to.be.a("string");
+  });
+
+  test("tenant tem campos principais", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("name");
+    expect(body.data).to.have.property("slug");
+    expect(body.data).to.have.property("plan");
+    expect(body.data).to.have.property("createdAt");
+  });
+}
+
 docs {
   # Buscar tenant por ID
 
@@ -19,7 +39,7 @@ docs {
 
   | Param | Tipo | Descrição |
   |-------|------|-----------|
-  | `id` | UUID | ID do tenant |
+  | `tenantId` | UUID | ID do tenant |
 
   ## Resposta (200)
 

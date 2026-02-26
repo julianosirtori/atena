@@ -1,0 +1,52 @@
+meta {
+  name: Criar agent duplicado (409)
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Agente Duplicado",
+    "email": "carlos@lojademo.com.br",
+    "password": "senha123",
+    "role": "agent"
+  }
+}
+
+tests {
+  test("status code é 409", function() {
+    expect(res.getStatus()).to.equal(409);
+  });
+
+  test("retorna erro ConflictError", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+    expect(body.error.code).to.equal("ConflictError");
+  });
+}
+
+docs {
+  # Criar agent duplicado (409)
+
+  Tenta criar um agent com e-mail que já existe no tenant.
+  O banco rejeita por constraint UNIQUE e a API retorna 409.
+
+  **Pré-requisito:** Execute "Listar agents" antes para garantir que o e-mail `carlos@lojademo.com.br` já existe.
+
+  ## Resposta (409)
+
+  ```json
+  {
+    "error": {
+      "code": "ConflictError",
+      "message": "Resource already exists"
+    }
+  }
+  ```
+}

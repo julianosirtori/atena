@@ -1,0 +1,66 @@
+meta {
+  name: Listar conversations com filtros
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations?page=1&limit=20&status=ai&channel=whatsapp
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  status: ai
+  channel: whatsapp
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("meta existe com paginação", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("meta");
+    expect(body.meta).to.have.property("total");
+  });
+
+  test("conversations filtradas têm status ai", function() {
+    const body = res.getBody();
+    body.data.forEach(function(conv) {
+      expect(conv.status).to.equal("ai");
+    });
+  });
+
+  test("conversations filtradas são do canal whatsapp", function() {
+    const body = res.getBody();
+    body.data.forEach(function(conv) {
+      expect(conv.channel).to.equal("whatsapp");
+    });
+  });
+}
+
+docs {
+  # Listar conversations com filtros
+
+  Testa a listagem de conversas com filtros: `status=ai` e `channel=whatsapp`.
+
+  ## Filtros aplicados
+
+  | Filtro | Valor | Descrição |
+  |--------|-------|-----------|
+  | `status` | `ai` | Apenas conversas no atendimento por IA |
+  | `channel` | `whatsapp` | Apenas conversas do WhatsApp |
+
+  ## Resposta (200)
+
+  Retorna apenas conversas que correspondem a todos os filtros.
+}

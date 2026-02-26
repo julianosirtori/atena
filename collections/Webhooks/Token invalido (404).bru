@@ -26,6 +26,17 @@ body:json {
   }
 }
 
+tests {
+  test("status code é 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+
+  test("retorna erro", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+  });
+}
+
 docs {
   # Webhook WhatsApp — Token inválido (404)
 

@@ -10,6 +10,22 @@ get {
   auth: none
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é ok", function() {
+    const body = res.getBody();
+    expect(body.status).to.equal("ok");
+  });
+
+  test("timestamp existe", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("timestamp");
+  });
+}
+
 docs {
   # Health Check
 

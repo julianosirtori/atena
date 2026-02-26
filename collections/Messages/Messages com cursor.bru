@@ -1,0 +1,69 @@
+meta {
+  name: Messages com cursor
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/messages?limit=5
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 5
+  ~cursor: {{messageId}}
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("retorna no máximo 5 mensagens", function() {
+    const body = res.getBody();
+    expect(body.data.length).to.be.at.most(5);
+  });
+
+  test("meta tem nextCursor", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("meta");
+    expect(body.meta).to.have.property("nextCursor");
+  });
+}
+
+docs {
+  # Messages com cursor (paginação)
+
+  Testa a paginação por cursor das mensagens com `limit=5`.
+  Ative o param `cursor` com o ID de uma mensagem para paginar.
+
+  ## Query params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `limit` | integer | Máximo de mensagens retornadas (5 neste teste) |
+  | `cursor` | UUID | ID da mensagem para paginar (desativado por padrão) |
+
+  ## Como testar paginação
+
+  1. Execute sem cursor → salve `meta.nextCursor` da resposta
+  2. Ative o param `cursor` com o valor salvo
+  3. Execute novamente → retorna a página anterior
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": [...],
+    "meta": {
+      "nextCursor": "uuid-ou-undefined"
+    }
+  }
+  ```
+}

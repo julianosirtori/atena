@@ -10,6 +10,12 @@ delete {
   auth: none
 }
 
+tests {
+  test("status code é 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}
+
 docs {
   # Deletar agent
 

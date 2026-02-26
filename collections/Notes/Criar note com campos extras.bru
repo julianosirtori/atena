@@ -1,0 +1,63 @@
+meta {
+  name: Criar note completa
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/notes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "agentId": "{{agentId}}",
+    "content": "Lead pediu orçamento para 3 unidades. Prazo de resposta: até amanhã 18h. Verificar estoque antes de responder."
+  }
+}
+
+tests {
+  test("status code é 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("data.id é string (UUID)", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.id).to.be.a("string");
+  });
+
+  test("content corresponde ao enviado", function() {
+    const body = res.getBody();
+    expect(body.data.content).to.include("orçamento para 3 unidades");
+  });
+
+  test("note tem agentId e createdAt", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("agentId");
+    expect(body.data).to.have.property("createdAt");
+  });
+}
+
+docs {
+  # Criar note completa
+
+  Cria uma nota com body completo (agentId + content detalhado).
+  Verifica que todos os campos são retornados corretamente.
+
+  ## Resposta (201)
+
+  ```json
+  {
+    "data": {
+      "id": "uuid",
+      "tenantId": "uuid",
+      "conversationId": "uuid",
+      "agentId": "uuid",
+      "content": "Lead pediu orçamento para 3 unidades...",
+      "createdAt": "2026-02-22T10:00:00.000Z"
+    }
+  }
+  ```
+}

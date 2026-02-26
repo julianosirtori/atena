@@ -1,0 +1,106 @@
+docs {
+  # Atena API
+
+  API REST do Atena — plataforma SaaS de automação de leads via IA para WhatsApp e Instagram.
+
+  ## Como usar esta collection
+
+  ### 1. Selecione o ambiente
+
+  No canto superior direito do Bruno, selecione **Local** (ou **Docker** se estiver rodando via container).
+
+  ### 2. Preencha as variáveis automaticamente
+
+  Execute as requests de listagem **nesta ordem** — cada uma preenche automaticamente a variável necessária para as próximas:
+
+  1. **Listar tenants** → preenche `{{tenantId}}`
+  2. **Listar agents** → preenche `{{agentId}}`
+  3. **Listar leads** → preenche `{{leadId}}`
+  4. **Listar conversations** → preenche `{{conversationId}}`
+
+  Depois disso, todas as requests ficam prontas para uso.
+
+  ### 3. Variáveis de ambiente
+
+  | Variável | Preenchida por | Usada em |
+  |----------|---------------|----------|
+  | `baseUrl` | Ambiente (fixa) | Todas as requests |
+  | `webhookToken` | Ambiente (fixa) | Webhooks |
+  | `tenantId` | Listar tenants | Quase todas as rotas |
+  | `agentId` | Listar agents | Agents, Notes |
+  | `leadId` | Listar leads | Leads, Lead Events |
+  | `conversationId` | Listar conversations | Messages, Notes |
+  | `incidentId` | Manual | Security Incidents |
+
+  ## Estrutura dos endpoints
+
+  | Pasta | Base path | Descrição |
+  |-------|-----------|-----------|
+  | Health | `/health` | Health check da API |
+  | Webhooks | `/webhooks/whatsapp` | Recebimento de mensagens WhatsApp (Z-API) |
+  | Tenants | `/api/v1/tenants` | Gerenciamento de tenants |
+  | Agents | `/api/v1/tenants/:tenantId/agents` | Agentes do tenant |
+  | Leads | `/api/v1/tenants/:tenantId/leads` | Leads (contatos) |
+  | Conversations | `/api/v1/tenants/:tenantId/conversations` | Conversas |
+  | Messages | `.../conversations/:conversationId/messages` | Mensagens da conversa |
+  | Notes | `.../conversations/:conversationId/notes` | Notas internas dos agentes |
+  | Lead Events | `/api/v1/tenants/:tenantId/events` | Histórico de eventos |
+  | Security Incidents | `/api/v1/tenants/:tenantId/security-incidents` | Incidentes de segurança |
+  | Billing | `/api/v1/tenants/:tenantId/billing` | Faturamento |
+  | Dashboard | `/api/v1/tenants/:tenantId/dashboard` | Métricas agregadas |
+  | Fluxo Completo | Vários | Workflow sequencial de teste (9 passos) |
+
+  ## Padrões da API
+
+  **Formato de resposta:**
+  - Sucesso: `{ "data": ... }` ou `{ "data": [...], "meta": { total, page, limit, totalPages } }`
+  - Erro: `{ "error": { "code": "...", "message": "...", "details": {...} } }`
+
+  **Paginação:**
+  - Offset (maioria): query params `page` e `limit`
+  - Cursor (messages): query params `cursor` e `limit`
+
+  **IDs:** UUID v4
+  **Timestamps:** ISO 8601 (TIMESTAMPTZ)
+
+  ## Testes automatizados
+
+  Todas as requests possuem blocos `tests {}` com assertions Chai que validam automaticamente:
+  - Status code esperado
+  - Estrutura da resposta (`data`, `meta`)
+  - Tipos e presença de campos-chave
+
+  Após executar uma request, a aba **Tests** mostra o resultado de cada assertion (verde = passou).
+
+  ## Cenários de erro
+
+  Cada pasta inclui requests para cenários de erro comuns:
+  - **404** — Recurso inexistente (UUID válido mas não existe)
+  - **400** — UUID inválido, body vazio, validação falha
+  - **409** — Conflito (ex: email duplicado)
+  - **Filtros** — Requests com todos os filtros ativados
+
+  ## Fluxo Completo
+
+  A pasta **Fluxo Completo** contém 9 requests numeradas que simulam um ciclo de teste end-to-end:
+
+  1. Lista tenants → salva `tenantId`
+  2. Cria agent de teste → salva `testAgentId`
+  3. Simula webhook WhatsApp (cria lead + conversa)
+  4. Lista leads → salva `testLeadId`
+  5. Lista conversations → salva `testConversationId`
+  6. Lista messages da conversa
+  7. Cria note na conversa
+  8. Verifica métricas do dashboard
+  9. Cleanup — deleta o agent de teste
+
+  Execute sequencialmente (01 → 09). Cada request salva IDs automaticamente para a próxima.
+
+  ## Pré-requisitos
+
+  ```
+  npm run db:migrate   # Criar tabelas
+  npm run db:seed      # Popular dados de teste
+  npm run dev          # Subir a API em localhost:3000
+  ```
+}

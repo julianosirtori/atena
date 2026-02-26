@@ -1,0 +1,46 @@
+meta {
+  name: 03 — Webhook nova conversa
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/webhooks/whatsapp
+  body: json
+  auth: none
+}
+
+headers {
+  x-webhook-token: {{webhookToken}}
+}
+
+body:json {
+  {
+    "phone": "5511988887777",
+    "messageId": "FLUXO-MSG-001",
+    "text": {
+      "message": "Olá, vi o anúncio no Instagram e quero saber o preço do iPhone 15"
+    },
+    "momment": "2026-02-25T10:00:00Z",
+    "isGroup": false
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é ok (mensagem processada)", function() {
+    const body = res.getBody();
+    expect(body.status).to.equal("ok");
+  });
+}
+
+docs {
+  # Fluxo Completo — 03 Webhook nova conversa
+
+  **Passo 3/9** — Simula uma mensagem WhatsApp que cria um novo lead e uma nova conversa.
+
+  O webhook processa a mensagem e enfileira o job no BullMQ.
+}

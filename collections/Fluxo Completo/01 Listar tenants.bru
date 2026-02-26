@@ -1,0 +1,43 @@
+meta {
+  name: 01 — Listar tenants
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants
+  body: none
+  auth: none
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.data && body.data.length > 0) {
+    bru.setEnvVar("tenantId", body.data[0].id);
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array com pelo menos 1 tenant", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+    expect(body.data.length).to.be.greaterThan(0);
+  });
+
+  test("tenantId salvo no ambiente", function() {
+    const body = res.getBody();
+    expect(body.data[0].id).to.be.a("string");
+  });
+}
+
+docs {
+  # Fluxo Completo — 01 Listar tenants
+
+  **Passo 1/9** — Lista tenants e salva `tenantId` para os próximos passos.
+
+  Execute esta pasta em ordem sequencial (01 → 09) para testar o fluxo completo da API.
+}

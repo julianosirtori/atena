@@ -1,0 +1,25 @@
+meta {
+  name: 09 — Cleanup - Deletar agent
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents/{{testAgentId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}
+
+docs {
+  # Fluxo Completo — 09 Cleanup - Deletar agent
+
+  **Passo 9/9** — Remove o agent de teste criado no passo 02.
+
+  Limpa os dados de teste para que o fluxo possa ser executado novamente.
+}

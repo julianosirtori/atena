@@ -1,0 +1,42 @@
+meta {
+  name: 08 — Dashboard
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/dashboard
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data existe com métricas", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("data");
+    expect(body.data).to.have.property("leadsToday");
+    expect(body.data).to.have.property("leadsMonth");
+  });
+
+  test("leadsToday é número", function() {
+    const body = res.getBody();
+    expect(body.data.leadsToday).to.be.a("number");
+  });
+
+  test("conversationsByStatus existe", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("conversationsByStatus");
+  });
+}
+
+docs {
+  # Fluxo Completo — 08 Dashboard
+
+  **Passo 8/9** — Verifica as métricas do dashboard após o fluxo de criação de lead + conversa.
+
+  As métricas devem refletir os dados criados nos passos anteriores.
+}

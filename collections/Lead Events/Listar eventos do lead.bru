@@ -14,6 +14,17 @@ params:query {
   ~eventType: score_change
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+}
+
 docs {
   # Listar eventos do lead
 

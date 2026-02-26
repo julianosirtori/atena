@@ -1,0 +1,49 @@
+meta {
+  name: Criar note sem body (400)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/notes
+  body: json
+  auth: none
+}
+
+body:json {
+  {}
+}
+
+tests {
+  test("status code é 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+
+  test("retorna erro de validação", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+    expect(body.error.code).to.equal("ValidationError");
+  });
+}
+
+docs {
+  # Criar note sem body (400)
+
+  Tenta criar uma nota com body vazio.
+  A API rejeita com 400 porque `agentId` e `content` são obrigatórios.
+
+  ## Resposta (400)
+
+  ```json
+  {
+    "error": {
+      "code": "ValidationError",
+      "message": "Validation error",
+      "details": {
+        "agentId": ["Required"],
+        "content": ["Required"]
+      }
+    }
+  }
+  ```
+}

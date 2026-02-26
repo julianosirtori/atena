@@ -26,6 +26,17 @@ body:json {
   }
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("status é ignored", function() {
+    const body = res.getBody();
+    expect(body.status).to.equal("ignored");
+  });
+}
+
 docs {
   # Webhook WhatsApp — Mensagem de grupo (ignorada)
 

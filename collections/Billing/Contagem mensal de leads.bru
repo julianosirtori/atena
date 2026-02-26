@@ -10,6 +10,25 @@ get {
   auth: none
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("item tem leadCount como número", function() {
+    const body = res.getBody();
+    if (body.data.length > 0) {
+      expect(body.data[0]).to.have.property("leadCount");
+      expect(body.data[0].leadCount).to.be.a("number");
+    }
+  });
+}
+
 docs {
   # Contagem mensal de leads
 

@@ -1,7 +1,7 @@
 meta {
-  name: WhatsApp — Mensagem com imagem
+  name: WhatsApp — Mensagem com documento
   type: http
-  seq: 2
+  seq: 8
 }
 
 post {
@@ -17,12 +17,13 @@ headers {
 body:json {
   {
     "phone": "5511999998888",
-    "messageId": "MSG-002",
-    "image": {
-      "imageUrl": "https://example.com/foto.jpg",
-      "caption": "Foto do produto"
+    "messageId": "MSG-008",
+    "document": {
+      "documentUrl": "https://example.com/catalogo.pdf",
+      "fileName": "catalogo-2026.pdf",
+      "mimeType": "application/pdf"
     },
-    "momment": "2026-02-22T10:01:00Z",
+    "momment": "2026-02-22T10:07:00Z",
     "isGroup": false
   }
 }
@@ -39,16 +40,17 @@ tests {
 }
 
 docs {
-  # Webhook WhatsApp — Mensagem com imagem
+  # Webhook WhatsApp — Mensagem com documento
 
-  Simula o recebimento de uma imagem via Z-API.
+  Simula o recebimento de um documento via Z-API.
 
   ## Payload
 
   | Campo | Tipo | Descrição |
   |-------|------|-----------|
-  | `image.imageUrl` | string | URL da imagem |
-  | `image.caption` | string | Legenda da imagem (opcional) |
+  | `document.documentUrl` | string | URL do documento |
+  | `document.fileName` | string | Nome do arquivo |
+  | `document.mimeType` | string | Tipo MIME do arquivo |
 
   ## Resposta (200)
 

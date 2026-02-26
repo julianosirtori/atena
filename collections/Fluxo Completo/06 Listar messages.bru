@@ -1,0 +1,44 @@
+meta {
+  name: 06 — Listar messages
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{testConversationId}}/messages?limit=50
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 50
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("mensagens têm campos obrigatórios", function() {
+    const body = res.getBody();
+    if (body.data.length > 0) {
+      const msg = body.data[0];
+      expect(msg).to.have.property("id");
+      expect(msg).to.have.property("direction");
+      expect(msg).to.have.property("content");
+    }
+  });
+}
+
+docs {
+  # Fluxo Completo — 06 Listar messages
+
+  **Passo 6/9** — Lista mensagens da conversa criada no passo 03.
+
+  Usa `testConversationId` salvo no passo 05.
+}

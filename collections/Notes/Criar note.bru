@@ -17,6 +17,24 @@ body:json {
   }
 }
 
+tests {
+  test("status code é 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("data.id é string (UUID)", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.id).to.be.a("string");
+  });
+
+  test("note tem content e agentId", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("content");
+    expect(body.data).to.have.property("agentId");
+  });
+}
+
 docs {
   # Criar note
 

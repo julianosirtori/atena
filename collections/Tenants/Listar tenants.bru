@@ -10,10 +10,40 @@ get {
   auth: none
 }
 
+script:post-response {
+  const body = res.getBody();
+  if (body && body.data && body.data.length > 0) {
+    bru.setEnvVar("tenantId", body.data[0].id);
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("tenant tem id, name e slug", function() {
+    const body = res.getBody();
+    if (body.data.length > 0) {
+      const tenant = body.data[0];
+      expect(tenant.id).to.be.a("string");
+      expect(tenant.name).to.be.a("string");
+      expect(tenant.slug).to.be.a("string");
+    }
+  });
+}
+
 docs {
   # Listar tenants
 
   Retorna todos os tenants cadastrados com dados resumidos.
+
+  **Dica:** Execute esta request primeiro — o script pós-resposta preenche automaticamente a variável `tenantId` com o primeiro tenant retornado.
 
   ## Resposta (200)
 

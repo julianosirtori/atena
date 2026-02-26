@@ -18,6 +18,24 @@ body:json {
   }
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data.id é string (UUID)", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.id).to.be.a("string");
+  });
+
+  test("campos atualizados refletidos na resposta", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("businessName");
+    expect(body.data).to.have.property("updatedAt");
+  });
+}
+
 docs {
   # Atualizar tenant
 
@@ -27,7 +45,7 @@ docs {
 
   | Param | Tipo | Descrição |
   |-------|------|-----------|
-  | `id` | UUID | ID do tenant |
+  | `tenantId` | UUID | ID do tenant |
 
   ## Body (todos opcionais)
 

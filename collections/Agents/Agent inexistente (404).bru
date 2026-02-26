@@ -1,0 +1,40 @@
+meta {
+  name: Agent inexistente (404)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/agents/00000000-0000-0000-0000-000000000000
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+
+  test("retorna erro NotFoundError", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+    expect(body.error.code).to.equal("NotFoundError");
+  });
+}
+
+docs {
+  # Agent inexistente (404)
+
+  Busca um agent com UUID válido mas que não existe no tenant.
+
+  ## Resposta (404)
+
+  ```json
+  {
+    "error": {
+      "code": "NotFoundError",
+      "message": "Agent not found"
+    }
+  }
+  ```
+}

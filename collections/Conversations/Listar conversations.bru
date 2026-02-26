@@ -17,10 +17,37 @@ params:query {
   ~channel: whatsapp
 }
 
+script:post-response {
+  const body = res.getBody();
+  if (body && body.data && body.data.length > 0) {
+    bru.setEnvVar("conversationId", body.data[0].id);
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("meta existe com paginação", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("meta");
+    expect(body.meta).to.have.property("total");
+    expect(body.meta).to.have.property("page");
+  });
+}
+
 docs {
   # Listar conversations
 
   Lista conversas do tenant com paginação offset e filtros. Inclui dados resumidos do lead em cada conversa.
+
+  **Dica:** O script pós-resposta preenche automaticamente a variável `conversationId` com a primeira conversa retornada.
 
   ## Path params
 

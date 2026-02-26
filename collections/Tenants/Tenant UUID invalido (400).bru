@@ -1,0 +1,41 @@
+meta {
+  name: Tenant UUID inválido (400)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/invalid-uuid
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+
+  test("retorna erro de validação", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+    expect(body.error.code).to.equal("ValidationError");
+  });
+}
+
+docs {
+  # Tenant UUID inválido (400)
+
+  Busca um tenant com formato de UUID inválido.
+  O PostgreSQL rejeita o UUID e a API retorna 400.
+
+  ## Resposta (400)
+
+  ```json
+  {
+    "error": {
+      "code": "ValidationError",
+      "message": "Invalid parameter format"
+    }
+  }
+  ```
+}

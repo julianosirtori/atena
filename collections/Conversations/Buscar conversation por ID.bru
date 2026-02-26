@@ -10,6 +10,23 @@ get {
   auth: none
 }
 
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data.id é string (UUID)", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.id).to.be.a("string");
+  });
+
+  test("conversation tem status", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("status");
+  });
+}
+
 docs {
   # Buscar conversation por ID
 

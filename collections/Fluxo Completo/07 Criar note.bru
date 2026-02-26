@@ -1,0 +1,44 @@
+meta {
+  name: 07 — Criar note
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{testConversationId}}/notes
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "agentId": "{{testAgentId}}",
+    "content": "Nota de teste do fluxo completo. Lead perguntou sobre preço do iPhone 15."
+  }
+}
+
+tests {
+  test("status code é 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("note criada com sucesso", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.id).to.be.a("string");
+  });
+
+  test("note tem content e agentId corretos", function() {
+    const body = res.getBody();
+    expect(body.data.content).to.include("fluxo completo");
+    expect(body.data).to.have.property("agentId");
+  });
+}
+
+docs {
+  # Fluxo Completo — 07 Criar note
+
+  **Passo 7/9** — Cria uma nota interna na conversa usando o agent criado no passo 02.
+
+  Usa `testConversationId` (passo 05) e `testAgentId` (passo 02).
+}

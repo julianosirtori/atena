@@ -42,8 +42,11 @@
       }
     }
   },
-  "postCreateCommand": "npm install && (cp -n .env.example .env || true) && npm install -g @anthropic-ai/claude-code",
-  "postStartCommand": "echo '✅ Atena dev environment ready. CLIs: node, gh, claude. Run: npm run dev'",
+  "containerEnv": {
+    "LINEAR_API_TOKEN": "${localEnv:LINEAR_API_TOKEN}"
+  },
+  "postCreateCommand": "npm install && (cp -n .env.example .env || true) && npm install -g @anthropic-ai/claude-code linearis",
+  "postStartCommand": "echo '✅ Atena dev environment ready. CLIs: node, gh, claude, linearis. Run: npm run dev'",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": { "label": "Atena API", "onAutoForward": "notify" },

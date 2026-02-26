@@ -22,6 +22,17 @@ body:json {
   }
 }
 
+tests {
+  test("status code é 401", function() {
+    expect(res.getStatus()).to.equal(401);
+  });
+
+  test("retorna erro", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+  });
+}
+
 docs {
   # Webhook WhatsApp — Sem token (401)
 
@@ -32,10 +43,8 @@ docs {
 
   ```json
   {
-    "error": {
-      "code": "Unauthorized",
-      "message": "Missing x-webhook-token header"
-    }
+    "error": "Unauthorized",
+    "message": "Missing x-webhook-token header"
   }
   ```
 }

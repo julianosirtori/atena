@@ -1,0 +1,41 @@
+meta {
+  name: Tenant inexistente (404)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/00000000-0000-0000-0000-000000000000
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 404", function() {
+    expect(res.getStatus()).to.equal(404);
+  });
+
+  test("retorna erro NotFoundError", function() {
+    const body = res.getBody();
+    expect(body).to.have.property("error");
+    expect(body.error.code).to.equal("NotFoundError");
+  });
+}
+
+docs {
+  # Tenant inexistente (404)
+
+  Busca um tenant com UUID válido mas que não existe no banco.
+  A API retorna 404 com o formato padrão de erro.
+
+  ## Resposta (404)
+
+  ```json
+  {
+    "error": {
+      "code": "NotFoundError",
+      "message": "Tenant not found"
+    }
+  }
+  ```
+}
