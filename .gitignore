@@ -36,3 +36,9 @@ drizzle/meta/
 
 # Turbo
 .turbo/
+
+# Terraform
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl

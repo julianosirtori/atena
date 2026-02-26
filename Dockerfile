@@ -26,6 +26,7 @@ COPY --from=build /app/packages/config/dist ./packages/config/dist
 COPY --from=build /app/packages/database/dist ./packages/database/dist
 COPY --from=build /app/packages/channels/dist ./packages/channels/dist
 COPY --from=build /app/packages/shared/dist ./packages/shared/dist
+COPY --from=build /app/packages/database/drizzle ./packages/database/drizzle
 COPY package.json ./
 COPY apps/api/package.json ./apps/api/
 COPY apps/workers/package.json ./apps/workers/
@@ -34,5 +35,7 @@ COPY packages/config/package.json ./packages/config/
 COPY packages/database/package.json ./packages/database/
 COPY packages/channels/package.json ./packages/channels/
 COPY packages/shared/package.json ./packages/shared/
+ARG TARGET_APP=api
+ENV APP_ENTRYPOINT=apps/${TARGET_APP}/dist/index.js
 EXPOSE 3000
-CMD ["node", "apps/api/dist/index.js"]
+CMD node ${APP_ENTRYPOINT}

@@ -1,0 +1,143 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch: {}
+  # push:
+  #   branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: sa-east-1
+  ECS_CLUSTER: atena-prod-cluster
+
+jobs:
+  deploy:
+    if: false # disabled until infra is provisioned
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push API image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker build \
+            --build-arg TARGET_APP=api \
+            -t $ECR_REGISTRY/atena-api:sha-${{ github.sha }} \
+            -t $ECR_REGISTRY/atena-api:latest \
+            .
+          docker push $ECR_REGISTRY/atena-api:sha-${{ github.sha }}
+          docker push $ECR_REGISTRY/atena-api:latest
+
+      - name: Build and push Workers image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          docker build \
+            --build-arg TARGET_APP=workers \
+            -t $ECR_REGISTRY/atena-workers:sha-${{ github.sha }} \
+            -t $ECR_REGISTRY/atena-workers:latest \
+            .
+          docker push $ECR_REGISTRY/atena-workers:sha-${{ github.sha }}
+          docker push $ECR_REGISTRY/atena-workers:latest
+
+      - name: Run database migrations
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+        run: |
+          TASK_ARN=$(aws ecs run-task \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --task-definition atena-prod-api \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.PRIVATE_SUBNET_IDS }}],securityGroups=[${{ secrets.ECS_SECURITY_GROUP_ID }}],assignPublicIp=DISABLED}" \
+            --overrides '{
+              "containerOverrides": [{
+                "name": "api",
+                "command": ["node", "packages/database/dist/migrate.js"]
+              }]
+            }' \
+            --query 'tasks[0].taskArn' \
+            --output text)
+
+          echo "Migration task: $TASK_ARN"
+
+          aws ecs wait tasks-stopped \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --tasks "$TASK_ARN"
+
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --tasks "$TASK_ARN" \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migration failed with exit code: $EXIT_CODE"
+            exit 1
+          fi
+          echo "Migrations completed successfully"
+
+      - name: Deploy API service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service atena-prod-api \
+            --force-new-deployment \
+            --no-cli-pager
+
+          echo "Waiting for API service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services atena-prod-api
+
+      - name: Deploy Workers service
+        run: |
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service atena-prod-workers \
+            --force-new-deployment \
+            --no-cli-pager
+
+          echo "Waiting for Workers service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services atena-prod-workers
+
+      - name: Health check
+        run: |
+          ALB_DNS="${{ secrets.ALB_DNS_NAME }}"
+          echo "Running health check against http://$ALB_DNS/health"
+
+          for i in $(seq 1 10); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://$ALB_DNS/health" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed on attempt $i"
+              exit 0
+            fi
+            echo "Attempt $i: status=$STATUS, retrying in 10s..."
+            sleep 10
+          done
+
+          echo "Health check failed after 10 attempts"
+          exit 1

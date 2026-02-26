@@ -1,0 +1,14 @@
+.git
+.github
+.devcontainer
+.docker-data
+.turbo
+.claude
+node_modules
+infra
+scripts
+collections
+docs
+coverage
+*.md
+!package.json
