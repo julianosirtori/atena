@@ -5,7 +5,7 @@ import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
 import { ZApiAdapter, MetaWhatsAppAdapter } from '@atena/channels'
 import { env } from '@atena/config'
 import {
-  processInboundWhatsApp,
+  processInboundZApi,
   processInboundMetaWhatsApp,
   WebhookError,
 } from '../../services/webhook.service.js'
@@ -18,14 +18,15 @@ const zapiAdapter = new ZApiAdapter({
 
 function detectProvider(request: FastifyRequest): 'zapi' | 'meta_cloud' | 'unknown' {
   if (request.headers['x-hub-signature-256']) return 'meta_cloud'
-  if (request.headers['x-webhook-token']) return 'zapi'
+  // Z-API payloads always include instanceId
+  const body = request.body as Record<string, unknown> | undefined
+  if (body && 'instanceId' in body) return 'zapi'
   return 'unknown'
 }
 
 function validateMetaSignature(rawBody: string, signature: string, appSecret: string): boolean {
   if (!signature || !appSecret) return false
-  const expected =
-    'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex')
+  const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex')
   try {
     return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
   } catch {
@@ -100,23 +101,33 @@ export const whatsappWebhookRoute: FastifyPluginAsync = async (server) => {
   })
 }
 
-async function handleZApi(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  correlationId: string,
-) {
-  const webhookToken = request.headers['x-webhook-token'] as string | undefined
-  if (!webhookToken) {
-    return reply.status(401).send({ error: 'Unauthorized', message: 'Missing x-webhook-token header' })
+async function handleZApi(request: FastifyRequest, reply: FastifyReply, correlationId: string) {
+  const body = request.body as { instanceId?: string }
+  const instanceId = body?.instanceId
+  if (!instanceId) {
+    return reply
+      .status(400)
+      .send({ error: 'Bad Request', message: 'Missing instanceId in payload' })
   }
 
   const inbound = zapiAdapter.parseInbound(request.body)
   if (!inbound) {
+    const payload = request.body as Record<string, unknown>
+    request.log.info(
+      {
+        instanceId,
+        fromMe: payload.fromMe,
+        isGroup: payload.isGroup,
+        hasText: 'text' in payload,
+        type: payload.type,
+      },
+      'Z-API payload ignored (no parseable message)',
+    )
     return reply.status(200).send({ status: 'ignored' })
   }
 
   try {
-    await processInboundWhatsApp(webhookToken, inbound, correlationId)
+    await processInboundZApi(instanceId, inbound, correlationId)
     return reply.status(200).send({ status: 'ok' })
   } catch (err) {
     if (err instanceof WebhookError) {
@@ -127,11 +138,7 @@ async function handleZApi(
   }
 }
 
-async function handleMeta(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  correlationId: string,
-) {
+async function handleMeta(request: FastifyRequest, reply: FastifyReply, correlationId: string) {
   const rawBody = (request as FastifyRequest & { rawBody?: string }).rawBody ?? ''
   const signature = request.headers['x-hub-signature-256'] as string
   const appSecret = env.META_APP_SECRET ?? ''

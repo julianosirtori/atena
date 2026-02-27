@@ -10,20 +10,23 @@ post {
   auth: none
 }
 
-headers {
-  x-webhook-token: {{webhookToken}}
-}
-
 body:json {
   {
+    "type": "ReceivedCallback",
+    "instanceId": "{{zapiInstanceId}}",
     "phone": "5511999998888",
     "messageId": "MSG-007",
+    "fromMe": false,
+    "momment": 1740218760000,
+    "isGroup": false,
+    "isNewsletter": false,
+    "senderName": "Maria Silva",
     "video": {
       "videoUrl": "https://example.com/video.mp4",
-      "caption": "Vídeo do produto em funcionamento"
-    },
-    "momment": "2026-02-22T10:06:00Z",
-    "isGroup": false
+      "caption": "Vídeo do produto em funcionamento",
+      "mimeType": "video/mp4",
+      "seconds": 15
+    }
   }
 }
 

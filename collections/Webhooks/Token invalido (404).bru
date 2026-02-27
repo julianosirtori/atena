@@ -1,5 +1,5 @@
 meta {
-  name: WhatsApp — Token inválido (404)
+  name: WhatsApp — InstanceId desconhecido (404)
   type: http
   seq: 6
 }
@@ -10,19 +10,20 @@ post {
   auth: none
 }
 
-headers {
-  x-webhook-token: token-que-nao-existe
-}
-
 body:json {
   {
+    "type": "ReceivedCallback",
+    "instanceId": "instance-que-nao-existe",
     "phone": "5511999998888",
     "messageId": "MSG-006",
+    "fromMe": false,
+    "momment": 1740218700000,
+    "isGroup": false,
+    "isNewsletter": false,
+    "senderName": "Maria Silva",
     "text": {
       "message": "Oi"
-    },
-    "momment": "2026-02-22T10:05:00Z",
-    "isGroup": false
+    }
   }
 }
 
@@ -38,9 +39,9 @@ tests {
 }
 
 docs {
-  # Webhook WhatsApp — Token inválido (404)
+  # Webhook WhatsApp — InstanceId desconhecido (404)
 
-  Token presente no header mas não corresponde a nenhum tenant cadastrado.
+  `instanceId` presente no payload mas não corresponde a nenhum tenant cadastrado.
 
   ## Resposta (404)
 

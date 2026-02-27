@@ -47,9 +47,8 @@ async function seed() {
         'Sempre oferecer frete grátis quando o pedido ultrapassar R$ 299. Mencionar promoções ativas.',
       whatsappProvider: 'zapi',
       whatsappConfig: {
-        instanceId: 'demo-instance-id',
-        token: 'demo-token',
-        webhookSecret: 'demo-webhook-secret',
+        instanceId: process.env.ZAPI_INSTANCE_ID || 'demo-instance-id',
+        token: process.env.ZAPI_TOKEN || 'demo-token',
         phone: '5511900000000',
       },
       billingStatus: 'active',

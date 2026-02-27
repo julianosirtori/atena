@@ -10,20 +10,22 @@ post {
   auth: none
 }
 
-headers {
-  x-webhook-token: {{webhookToken}}
-}
-
 body:json {
   {
+    "type": "ReceivedCallback",
+    "instanceId": "{{zapiInstanceId}}",
     "phone": "5511999998888",
     "messageId": "MSG-002",
+    "fromMe": false,
+    "momment": 1740218460000,
+    "isGroup": false,
+    "isNewsletter": false,
+    "senderName": "Maria Silva",
     "image": {
       "imageUrl": "https://example.com/foto.jpg",
-      "caption": "Foto do produto"
-    },
-    "momment": "2026-02-22T10:01:00Z",
-    "isGroup": false
+      "caption": "Foto do produto",
+      "mimeType": "image/jpeg"
+    }
   }
 }
 

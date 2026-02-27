@@ -10,19 +10,20 @@ post {
   auth: none
 }
 
-headers {
-  x-webhook-token: {{webhookToken}}
-}
-
 body:json {
   {
+    "type": "ReceivedCallback",
+    "instanceId": "{{zapiInstanceId}}",
     "phone": "5511999998888",
     "messageId": "MSG-001",
+    "fromMe": false,
+    "momment": 1740218400000,
+    "isGroup": false,
+    "isNewsletter": false,
+    "senderName": "Maria Silva",
     "text": {
       "message": "Oi, quero saber dos produtos"
-    },
-    "momment": "2026-02-22T10:00:00Z",
-    "isGroup": false
+    }
   }
 }
 
@@ -47,7 +48,7 @@ docs {
 
   | Header | Obrigatório | Descrição |
   |--------|-------------|-----------|
-  | `x-webhook-token` | **Sim** | Token do webhook cadastrado no tenant (`whatsappConfig.webhookSecret`) |
+  Nenhum header de autenticação necessário — o Z-API é identificado pelo `instanceId` no body.
 
   ## Payload Z-API
 
@@ -56,7 +57,9 @@ docs {
   | `phone` | string | Telefone do remetente (DDI+DDD+número) |
   | `messageId` | string | ID externo da mensagem no Z-API |
   | `text.message` | string | Conteúdo da mensagem de texto |
-  | `momment` | string | Timestamp ISO 8601 do envio |
+  | `fromMe` | boolean | `true` = mensagem enviada pela instância (ignorada) |
+  | `momment` | integer | Timestamp Unix em milissegundos |
+  | `senderName` | string | Nome do remetente no WhatsApp |
   | `isGroup` | boolean | `true` = mensagem de grupo (ignorada) |
 
   ## Respostas
@@ -85,6 +88,6 @@ docs {
   |--------|-----------|
   | `200` | Processado ou ignorado |
   | `400` | Payload inválido |
-  | `401` | Header `x-webhook-token` ausente |
+  | `401` | Payload sem `instanceId` (provider desconhecido) |
   | `500` | Erro interno |
 }

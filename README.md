@@ -140,7 +140,6 @@ npm run test --workspace=@atena/channels
 | `CLAUDE_API_KEY` | **Yes** | Anthropic API key for Claude |
 | `ZAPI_INSTANCE_ID` | No | Z-API instance ID (use MockAdapter without it) |
 | `ZAPI_TOKEN` | No | Z-API authentication token |
-| `ZAPI_WEBHOOK_SECRET` | No | Z-API webhook signature secret |
 | `META_WHATSAPP_TOKEN` | No | Meta Cloud API access token |
 | `META_WHATSAPP_VERIFY_TOKEN` | No | Meta webhook verification token |
 | `META_APP_SECRET` | No | Meta app secret for signature validation |

@@ -1,10 +1,30 @@
 {
+  "type": "ReceivedCallback",
+  "instanceId": "INST-TEST-001",
   "phone": "5511999998888",
   "messageId": "ABCD1234567891",
+  "fromMe": false,
+  "momment": 1708000260000,
+  "status": "RECEIVED",
+  "chatName": "Maria Silva",
+  "senderName": "Maria Silva",
+  "senderPhoto": "https://example.com/photo.jpg",
+  "photo": "https://example.com/photo.jpg",
+  "isGroup": false,
+  "isNewsletter": false,
+  "isEdit": false,
+  "isStatusReply": false,
+  "broadcast": false,
+  "waitingMessage": false,
+  "connectedPhone": "5511900000000",
+  "participantPhone": null,
+  "participantLid": null,
+  "senderLid": "81896604192873@lid",
   "image": {
     "imageUrl": "https://example.com/image.jpg",
-    "caption": "Olha este produto"
-  },
-  "momment": "2026-02-15T10:31:00.000Z",
-  "isGroup": false
+    "caption": "Olha este produto",
+    "mimeType": "image/jpeg",
+    "width": 800,
+    "height": 600
+  }
 }

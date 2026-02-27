@@ -2,9 +2,9 @@
   "type": "ReceivedCallback",
   "instanceId": "INST-TEST-001",
   "phone": "5511999998888",
-  "messageId": "ABCD1234567890",
+  "messageId": "ABCD1234567894",
   "fromMe": false,
-  "momment": 1708000200000,
+  "momment": 1708000440000,
   "status": "RECEIVED",
   "chatName": "Maria Silva",
   "senderName": "Maria Silva",
@@ -20,5 +20,11 @@
   "participantPhone": null,
   "participantLid": null,
   "senderLid": "81896604192873@lid",
-  "text": { "message": "Oi, vi o anúncio de vocês" }
+  "document": {
+    "documentUrl": "https://example.com/catalogo.pdf",
+    "mimeType": "application/pdf",
+    "title": "catalogo-2026",
+    "pageCount": 5,
+    "fileName": "catalogo-2026.pdf"
+  }
 }

@@ -10,19 +10,23 @@ post {
   auth: none
 }
 
-headers {
-  x-webhook-token: {{webhookToken}}
-}
-
 body:json {
   {
+    "type": "ReceivedCallback",
+    "instanceId": "{{zapiInstanceId}}",
     "phone": "5511999998888",
     "messageId": "MSG-003",
+    "fromMe": false,
+    "momment": 1740218520000,
+    "isGroup": false,
+    "isNewsletter": false,
+    "senderName": "Maria Silva",
     "audio": {
-      "audioUrl": "https://example.com/audio.ogg"
-    },
-    "momment": "2026-02-22T10:02:00Z",
-    "isGroup": false
+      "audioUrl": "https://example.com/audio.ogg",
+      "ptt": true,
+      "seconds": 10,
+      "mimeType": "audio/ogg; codecs=opus"
+    }
   }
 }
 

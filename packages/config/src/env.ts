@@ -40,7 +40,7 @@ export const envSchema = z.object({
 
   ZAPI_INSTANCE_ID: z.string().optional(),
   ZAPI_TOKEN: z.string().optional(),
-  ZAPI_WEBHOOK_SECRET: z.string().optional(),
+  ZAPI_CLIENT_TOKEN: z.string().optional(),
 
   META_WHATSAPP_TOKEN: z.string().optional(),
   META_WHATSAPP_VERIFY_TOKEN: z.string().optional(),

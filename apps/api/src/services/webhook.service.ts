@@ -14,13 +14,13 @@ export class WebhookError extends Error {
   }
 }
 
-export async function findTenantByWebhookSecret(secret: string) {
+export async function findTenantByInstanceId(instanceId: string) {
   const rows = await db
     .select({ id: tenants.id, whatsappProvider: tenants.whatsappProvider })
     .from(tenants)
     .where(
       and(
-        sql`${tenants.whatsappConfig}->>'webhookSecret' = ${secret}`,
+        sql`${tenants.whatsappConfig}->>'instanceId' = ${instanceId}`,
         eq(tenants.whatsappProvider, 'zapi'),
       ),
     )
@@ -48,19 +48,25 @@ export async function upsertLead(
   tenantId: string,
   phone: string,
   channel: 'whatsapp' | 'instagram',
+  senderName?: string,
 ) {
   const now = new Date()
 
   const existing = await db
-    .select({ id: leads.id })
+    .select({ id: leads.id, name: leads.name })
     .from(leads)
     .where(and(eq(leads.tenantId, tenantId), eq(leads.phone, phone)))
     .limit(1)
 
   if (existing[0]) {
+    const updates: Record<string, unknown> = { lastContactAt: now, lastMessageAt: now, updatedAt: now }
+    // Fill name if not set yet
+    if (!existing[0].name && senderName) {
+      updates.name = senderName
+    }
     await db
       .update(leads)
-      .set({ lastContactAt: now, lastMessageAt: now, updatedAt: now })
+      .set(updates)
       .where(eq(leads.id, existing[0].id))
 
     return existing[0]
@@ -72,6 +78,7 @@ export async function upsertLead(
       tenantId,
       phone,
       channel,
+      name: senderName || null,
       stage: 'new',
       score: 0,
       firstContactAt: now,
@@ -150,7 +157,7 @@ async function processInboundCommon(
   inbound: InboundMessage,
   correlationId?: string,
 ) {
-  const lead = await upsertLead(tenantId, inbound.from, inbound.channel)
+  const lead = await upsertLead(tenantId, inbound.from, inbound.channel, inbound.senderName)
 
   // Count lead for billing (never blocks message processing)
   try {
@@ -174,12 +181,12 @@ async function processInboundCommon(
   return { tenantId, leadId: lead.id, conversationId: conversation.id, messageId: message.id }
 }
 
-export async function processInboundWhatsApp(
-  webhookToken: string,
+export async function processInboundZApi(
+  instanceId: string,
   inbound: InboundMessage,
   correlationId?: string,
 ) {
-  const tenant = await findTenantByWebhookSecret(webhookToken)
+  const tenant = await findTenantByInstanceId(instanceId)
 
   if (!tenant) {
     throw new WebhookError('Tenant not found', 404)

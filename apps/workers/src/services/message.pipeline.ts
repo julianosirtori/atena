@@ -61,6 +61,7 @@ function resolveChannelAdapter(tenant: {
       instanceId: config.instanceId || '',
       token: config.token || '',
       webhookSecret: config.webhookSecret || '',
+      clientToken: env.ZAPI_CLIENT_TOKEN || config.clientToken || '',
     })
   }
 
@@ -315,51 +316,7 @@ export async function processMessage(
     extracted_info: parsed.extractedInfo,
   })
 
-  // 11. Update score
-  const currentScore = lead.score
-  const currentStage = lead.stage as 'new' | 'qualifying' | 'hot' | 'human' | 'converted' | 'lost'
-  const scoreResult = await updateScore(
-    job.leadId,
-    job.tenantId,
-    currentScore,
-    currentStage,
-    parsed.scoreDelta,
-    'ai',
-  )
-  log.info(
-    {
-      oldScore: currentScore,
-      newScore: scoreResult.newScore,
-      stageChanged: scoreResult.stageChanged,
-    },
-    'Score updated',
-  )
-
-  // 12. Evaluate handoff decision
-  const handoffDecision = evaluateHandoff({
-    aiShouldHandoff: parsed.shouldHandoff,
-    aiHandoffReason: parsed.handoffReason,
-    aiConfidence: parsed.confidence,
-    aiIntent: parsed.intent,
-    explicitHandoff,
-    forceHandoff,
-    validationReason: validation.reason,
-    newScore: scoreResult.newScore,
-    aiMessagesCount: (conversation.aiMessagesCount ?? 0) + 1,
-    handoffRules: tenant.handoffRules,
-  })
-
-  if (handoffDecision.shouldHandoff) {
-    await triggerHandoff({
-      tenantId: job.tenantId,
-      conversationId: job.conversationId,
-      leadId: job.leadId,
-      reason: handoffDecision.reason!,
-      handoffRules: tenant.handoffRules,
-    })
-  }
-
-  // 13. Send message via channel adapter
+  // 11. Send message via channel adapter BEFORE handoff (spec: AI always responds first)
   const adapter = resolveChannelAdapter(tenant)
   if (lead.phone) {
     let deliveryStatus: 'sent' | 'failed' = 'failed'
@@ -409,6 +366,56 @@ export async function processMessage(
         })
         .where(eq(messages.id, outboundMsg.id))
     }
+  }
+
+  // 12. Update score
+  const currentScore = lead.score
+  const currentStage = lead.stage as 'new' | 'qualifying' | 'hot' | 'human' | 'converted' | 'lost'
+  const scoreResult = await updateScore(
+    job.leadId,
+    job.tenantId,
+    currentScore,
+    currentStage,
+    parsed.scoreDelta,
+    'ai',
+  )
+  log.info(
+    {
+      oldScore: currentScore,
+      newScore: scoreResult.newScore,
+      stageChanged: scoreResult.stageChanged,
+    },
+    'Score updated',
+  )
+
+  // 13. Evaluate handoff — skip if conversation is already in waiting_human
+  const alreadyWaitingHuman = conversation.status === 'waiting_human'
+
+  if (!alreadyWaitingHuman) {
+    const handoffDecision = evaluateHandoff({
+      aiShouldHandoff: parsed.shouldHandoff,
+      aiHandoffReason: parsed.handoffReason,
+      aiConfidence: parsed.confidence,
+      aiIntent: parsed.intent,
+      explicitHandoff,
+      forceHandoff,
+      validationReason: validation.reason,
+      newScore: scoreResult.newScore,
+      aiMessagesCount: (conversation.aiMessagesCount ?? 0) + 1,
+      handoffRules: tenant.handoffRules,
+    })
+
+    if (handoffDecision.shouldHandoff) {
+      await triggerHandoff({
+        tenantId: job.tenantId,
+        conversationId: job.conversationId,
+        leadId: job.leadId,
+        reason: handoffDecision.reason!,
+        handoffRules: tenant.handoffRules,
+      })
+    }
+  } else {
+    log.info('Conversation already in waiting_human, skipping handoff evaluation')
   }
 
   // 14. Update conversation counters

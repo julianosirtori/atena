@@ -1,5 +1,5 @@
 meta {
-  name: WhatsApp — Sem token (401)
+  name: WhatsApp — Provider desconhecido (401)
   type: http
   seq: 5
 }
@@ -14,11 +14,12 @@ body:json {
   {
     "phone": "5511999998888",
     "messageId": "MSG-005",
+    "fromMe": false,
+    "momment": 1740218640000,
+    "isGroup": false,
     "text": {
       "message": "Oi"
-    },
-    "momment": "2026-02-22T10:04:00Z",
-    "isGroup": false
+    }
   }
 }
 
@@ -34,17 +35,17 @@ tests {
 }
 
 docs {
-  # Webhook WhatsApp — Sem token (401)
+  # Webhook WhatsApp — Provider desconhecido (401)
 
-  Requisição **sem** o header `x-webhook-token`.
-  A API rejeita com 401 Unauthorized.
+  Requisição **sem** `instanceId` no body e **sem** header `x-hub-signature-256`.
+  A API não consegue identificar o provider e rejeita com 401 Unauthorized.
 
   ## Resposta (401)
 
   ```json
   {
     "error": "Unauthorized",
-    "message": "Missing x-webhook-token header"
+    "message": "Unknown webhook provider"
   }
   ```
 }

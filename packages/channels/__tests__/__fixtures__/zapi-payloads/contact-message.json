@@ -2,9 +2,9 @@
   "type": "ReceivedCallback",
   "instanceId": "INST-TEST-001",
   "phone": "5511999998888",
-  "messageId": "ABCD1234567890",
+  "messageId": "ABCD1234567897",
   "fromMe": false,
-  "momment": 1708000200000,
+  "momment": 1708000620000,
   "status": "RECEIVED",
   "chatName": "Maria Silva",
   "senderName": "Maria Silva",
@@ -20,5 +20,9 @@
   "participantPhone": null,
   "participantLid": null,
   "senderLid": "81896604192873@lid",
-  "text": { "message": "Oi, vi o anúncio de vocês" }
+  "contact": {
+    "displayName": "João Souza",
+    "vCard": "BEGIN:VCARD\nVERSION:3.0\nN:;João Souza;;;\nFN:João Souza\nTEL;type=CELL;type=VOICE;waid=5511977776666:+55 11 97777-6666\nEND:VCARD",
+    "phones": ["5511977776666"]
+  }
 }

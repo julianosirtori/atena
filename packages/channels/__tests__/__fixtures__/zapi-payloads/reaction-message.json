@@ -2,9 +2,9 @@
   "type": "ReceivedCallback",
   "instanceId": "INST-TEST-001",
   "phone": "5511999998888",
-  "messageId": "ABCD1234567890",
+  "messageId": "ABCD1234567898",
   "fromMe": false,
-  "momment": 1708000200000,
+  "momment": 1708000680000,
   "status": "RECEIVED",
   "chatName": "Maria Silva",
   "senderName": "Maria Silva",
@@ -20,5 +20,14 @@
   "participantPhone": null,
   "participantLid": null,
   "senderLid": "81896604192873@lid",
-  "text": { "message": "Oi, vi o anúncio de vocês" }
+  "reaction": {
+    "value": "\u2764\ufe0f",
+    "time": 1708000680150,
+    "reactionBy": "5511999998888",
+    "referencedMessage": {
+      "messageId": "3EB0796DC6B777C0C7CD",
+      "fromMe": true,
+      "phone": "5511999998888"
+    }
+  }
 }

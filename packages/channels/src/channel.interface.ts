@@ -8,6 +8,7 @@ export interface InboundMessage {
   mediaType?: 'image' | 'audio' | 'video' | 'document'
   timestamp: Date
   channel: 'whatsapp' | 'instagram'
+  senderName?: string
   raw: unknown
 }
 

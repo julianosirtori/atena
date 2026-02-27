@@ -55,7 +55,6 @@ Para desenvolver sem gastar em API, o sistema usa `MockAdapter` quando `whatsapp
    ```env
    ZAPI_INSTANCE_ID=seu-instance-id
    ZAPI_TOKEN=seu-token
-   ZAPI_WEBHOOK_SECRET=um-secret-forte-qualquer
    ```
 
 ### Configurar Webhook URL
@@ -82,7 +81,7 @@ https://SEU-NGROK.ngrok-free.app/webhooks/whatsapp
 ```sql
 UPDATE tenants SET
   whatsapp_provider = 'zapi',
-  whatsapp_config = '{"instanceId": "seu-instance-id", "token": "seu-token", "webhookSecret": "seu-secret", "phone": "5511999999999"}'
+  whatsapp_config = '{"instanceId": "seu-instance-id", "token": "seu-token", "phone": "5511999999999"}'
 WHERE slug = 'loja-demo';
 ```
 
@@ -103,13 +102,17 @@ npm run dev --workspace=@atena/workers
 ```bash
 curl -X POST http://localhost:3000/webhooks/whatsapp \
   -H "Content-Type: application/json" \
-  -H "x-webhook-token: demo-webhook-secret" \
   -d '{
+    "type": "ReceivedCallback",
+    "instanceId": "demo-instance-id",
     "phone": "5511999999999",
     "messageId": "MSG-TEST-001",
-    "text": {"message": "Oi, quanto custa o iPhone?"},
-    "momment": "2026-02-22T10:00:00Z",
-    "isGroup": false
+    "fromMe": false,
+    "momment": 1740218400000,
+    "isGroup": false,
+    "isNewsletter": false,
+    "senderName": "Cliente Teste",
+    "text": {"message": "Oi, quanto custa o iPhone?"}
   }'
 ```
 

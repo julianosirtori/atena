@@ -10,19 +10,19 @@ post {
   auth: none
 }
 
-headers {
-  x-webhook-token: {{webhookToken}}
-}
-
 body:json {
   {
+    "type": "ReceivedCallback",
+    "instanceId": "{{zapiInstanceId}}",
     "phone": "5511999998888",
     "messageId": "MSG-004",
+    "fromMe": false,
+    "momment": 1740218580000,
+    "isGroup": true,
+    "senderName": "Grupo Vendas",
     "text": {
       "message": "Mensagem de grupo"
-    },
-    "momment": "2026-02-22T10:03:00Z",
-    "isGroup": true
+    }
   }
 }
 

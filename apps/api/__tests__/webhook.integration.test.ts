@@ -11,20 +11,27 @@ process.env.LOG_LEVEL = 'error'
 process.env.META_WHATSAPP_VERIFY_TOKEN = 'test-meta-verify-token'
 process.env.META_APP_SECRET = 'test-meta-app-secret'
 
-const WEBHOOK_SECRET = 'test-webhook-secret-integration'
+const ZAPI_INSTANCE_ID = 'test-instance-integration'
 const TEST_PHONE = '5511988880001'
 const META_PHONE_NUMBER_ID = 'meta-phone-id-test-001'
 const META_TEST_PHONE = '5511977770001'
 const META_APP_SECRET = 'test-meta-app-secret'
 const META_VERIFY_TOKEN = 'test-meta-verify-token'
 
-function zapiPayload(phone: string, text: string, messageId?: string) {
+function zapiPayload(phone: string, text: string, instanceId?: string, messageId?: string) {
   return {
+    type: 'ReceivedCallback',
+    instanceId: instanceId ?? ZAPI_INSTANCE_ID,
     phone,
     messageId: messageId ?? `MSG-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     text: { message: text },
-    momment: new Date().toISOString(),
+    momment: Date.now(),
+    fromMe: false,
     isGroup: false,
+    isNewsletter: false,
+    broadcast: false,
+    senderName: 'Test Lead',
+    status: 'RECEIVED',
   }
 }
 
@@ -105,7 +112,7 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     const { db, tenants } = await import('@atena/database')
     const { QUEUE_NAMES } = await import('@atena/config')
 
-    // Create test tenant with known webhook secret
+    // Create test tenant with known instanceId
     const [tenant] = await db
       .insert(tenants)
       .values({
@@ -114,9 +121,8 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
         businessName: 'Test Business',
         whatsappProvider: 'zapi',
         whatsappConfig: {
-          instanceId: 'test-instance',
+          instanceId: ZAPI_INSTANCE_ID,
           token: 'test-token',
-          webhookSecret: WEBHOOK_SECRET,
           phone: '5511900000001',
         },
       })
@@ -160,7 +166,6 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     const response = await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': WEBHOOK_SECRET },
       payload,
     })
 
@@ -191,8 +196,8 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     expect(dbMessages[0].senderType).toBe('lead')
     expect(dbMessages[0].content).toBe('Oi, quero saber dos produtos')
 
-    // Verify BullMQ job enqueued
-    const jobs = await inspectQueue.getJobs(['waiting'])
+    // Verify BullMQ job enqueued (check all states — job may already be active/completed)
+    const jobs = await inspectQueue.getJobs(['waiting', 'active', 'completed', 'delayed'])
     expect(jobs.length).toBeGreaterThanOrEqual(1)
     const job = jobs.find((j) => j.data.tenantId === tenantId)
     expect(job).toBeDefined()
@@ -219,7 +224,6 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     const response = await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': WEBHOOK_SECRET },
       payload,
     })
 
@@ -245,8 +249,15 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     expect(msgsAfter.length).toBe(msgCountBefore.length + 1)
   })
 
-  it('returns 401 when no provider header is present', async () => {
-    const payload = zapiPayload('5511988880002', 'Oi')
+  it('returns 401 when payload has no instanceId (unknown provider)', async () => {
+    const payload = {
+      phone: '5511988880002',
+      messageId: 'MSG-NO-INSTANCE',
+      text: { message: 'Oi' },
+      momment: Date.now(),
+      fromMe: false,
+      isGroup: false,
+    }
 
     const response = await server.inject({
       method: 'POST',
@@ -262,23 +273,19 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     const response = await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: {
-        'x-webhook-token': WEBHOOK_SECRET,
-        'content-type': 'application/json',
-      },
+      headers: { 'content-type': 'application/json' },
       payload: '',
     })
 
     expect(response.statusCode).toBe(400)
   })
 
-  it('returns 404 when token matches no tenant', async () => {
-    const payload = zapiPayload('5511988880003', 'Oi')
+  it('returns 404 when instanceId matches no tenant', async () => {
+    const payload = zapiPayload('5511988880003', 'Oi', 'nonexistent-instance-id')
 
     const response = await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': 'nonexistent-secret-token' },
       payload,
     })
 
@@ -293,7 +300,6 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     const response = await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': WEBHOOK_SECRET },
       payload,
     })
 
@@ -324,14 +330,12 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': WEBHOOK_SECRET },
       payload: payload1,
     })
 
     await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': WEBHOOK_SECRET },
       payload: payload2,
     })
 
@@ -358,7 +362,6 @@ describe('POST /webhooks/whatsapp (Z-API)', () => {
     const response = await server.inject({
       method: 'POST',
       url: '/webhooks/whatsapp',
-      headers: { 'x-webhook-token': WEBHOOK_SECRET },
       payload,
     })
     const elapsed = performance.now() - start
@@ -576,34 +579,32 @@ describe('Meta Cloud API Webhooks', () => {
       expect(response.json().error).toBe('Tenant not found')
     })
 
-    it('Z-API backward compatibility: Z-API payload with x-webhook-token still works', async () => {
+    it('Z-API tenant lookup uses instanceId from payload body', async () => {
       // Create a Z-API tenant for this test
       const { db, tenants } = await import('@atena/database')
-      const zapiSecret = `compat-test-${Date.now()}`
+      const testInstanceId = `inst-lookup-test-${Date.now()}`
 
       const [zapiTenant] = await db
         .insert(tenants)
         .values({
-          name: 'Z-API Compat Tenant',
-          slug: `test-zapi-compat-${Date.now()}`,
-          businessName: 'Compat Business',
+          name: 'Z-API InstanceId Tenant',
+          slug: `test-zapi-instance-${Date.now()}`,
+          businessName: 'InstanceId Business',
           whatsappProvider: 'zapi',
           whatsappConfig: {
-            instanceId: 'compat-instance',
-            token: 'compat-token',
-            webhookSecret: zapiSecret,
+            instanceId: testInstanceId,
+            token: 'some-token',
             phone: '5511900000099',
           },
         })
         .returning()
 
       try {
-        const payload = zapiPayload('5511988880099', 'Teste compatibilidade Z-API')
+        const payload = zapiPayload('5511988880099', 'Teste instanceId Z-API', testInstanceId)
 
         const response = await server.inject({
           method: 'POST',
           url: '/webhooks/whatsapp',
-          headers: { 'x-webhook-token': zapiSecret },
           payload,
         })
 
