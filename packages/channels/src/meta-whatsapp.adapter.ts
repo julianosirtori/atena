@@ -110,8 +110,7 @@ export class MetaWhatsAppAdapter implements ChannelAdapter {
   }
 
   async sendMessage(to: string, content: string, _options?: SendOptions): Promise<DeliveryResult> {
-    const url = `https://graph.facebook.com/v21.0/${this.phoneNumberId}/messages`
-
+    const url = `https://graph.facebook.com/v25.0/${this.phoneNumberId}/messages`
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -139,7 +138,7 @@ export class MetaWhatsAppAdapter implements ChannelAdapter {
   }
 
   async sendMedia(to: string, media: MediaPayload): Promise<DeliveryResult> {
-    const url = `https://graph.facebook.com/v21.0/${this.phoneNumberId}/messages`
+    const url = `https://graph.facebook.com/v25.0/${this.phoneNumberId}/messages`
 
     try {
       const response = await fetch(url, {
@@ -172,7 +171,8 @@ export class MetaWhatsAppAdapter implements ChannelAdapter {
     if (!signature) return false
 
     const body = JSON.stringify(req.body)
-    const expected = 'sha256=' + crypto.createHmac('sha256', this.appSecret).update(body).digest('hex')
+    const expected =
+      'sha256=' + crypto.createHmac('sha256', this.appSecret).update(body).digest('hex')
 
     return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
   }
@@ -186,10 +186,7 @@ export class MetaWhatsAppAdapter implements ChannelAdapter {
     'hub.verify_token'?: string
     'hub.challenge'?: string
   }): string | null {
-    if (
-      query['hub.mode'] === 'subscribe' &&
-      query['hub.verify_token'] === this.verifyToken
-    ) {
+    if (query['hub.mode'] === 'subscribe' && query['hub.verify_token'] === this.verifyToken) {
       return query['hub.challenge'] || null
     }
     return null

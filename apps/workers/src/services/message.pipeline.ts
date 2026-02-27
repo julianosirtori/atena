@@ -3,7 +3,13 @@ import { tenants, leads, conversations, messages } from '@atena/database'
 import { eq, and, desc } from 'drizzle-orm'
 import { MockAdapter, ZApiAdapter, MetaWhatsAppAdapter } from '@atena/channels'
 import type { ChannelAdapter } from '@atena/channels'
-import type { TenantForPrompt, LeadForPrompt, MessageForPrompt, HandoffDecision } from '@atena/shared'
+import { env } from '@atena/config'
+import type {
+  TenantForPrompt,
+  LeadForPrompt,
+  MessageForPrompt,
+  HandoffDecision,
+} from '@atena/shared'
 import { withRetry, CircuitBreakerOpenError } from '@atena/shared'
 import type { Queue } from 'bullmq'
 import { sanitizeInput } from './prompt.guard.js'
@@ -11,7 +17,11 @@ import { buildSystemPrompt, buildUserPrompt } from './prompt.builder.js'
 import { parseAIResponse } from './response.parser.js'
 import { validateResponse } from './response.validator.js'
 import { updateScore, shouldAutoHandoff } from './scoring.service.js'
-import { logSanitizationIncident, logValidationIncident, logAIFailureIncident } from './security-incident.service.js'
+import {
+  logSanitizationIncident,
+  logValidationIncident,
+  logAIFailureIncident,
+} from './security-incident.service.js'
 import { classifyAIError } from '../lib/ai-error.classifier.js'
 import { triggerHandoff } from './handoff.service.js'
 import type { AIService } from './ai.service.js'
@@ -33,23 +43,20 @@ function resolveChannelAdapter(tenant: {
   whatsappConfig: unknown
 }): ChannelAdapter {
   const config = tenant.whatsappConfig as Record<string, string> | null
-  const instanceId = config?.instanceId
 
-  if (!instanceId || instanceId === 'mock') {
-    return new MockAdapter()
-  }
-
+  // Meta Cloud API — check provider first (no instanceId in config)
   if (tenant.whatsappProvider === 'meta_cloud' && config) {
     return new MetaWhatsAppAdapter({
-      token: config.token || '',
+      token: env.META_WHATSAPP_TOKEN || '',
       phoneNumberId: config.phoneNumberId || '',
-      appSecret: config.appSecret || '',
-      verifyToken: config.verifyToken || '',
+      appSecret: env.META_APP_SECRET || '',
+      verifyToken: env.META_WHATSAPP_VERIFY_TOKEN || '',
     })
   }
 
-  // Default to Z-API
-  if (config) {
+  // Z-API
+  const instanceId = config?.instanceId
+  if (instanceId && instanceId !== 'mock' && config) {
     return new ZApiAdapter({
       instanceId: config.instanceId || '',
       token: config.token || '',
@@ -90,14 +97,15 @@ export async function processMessage(
   aiService: AIService,
   notificationQueue?: Queue,
 ): Promise<void> {
-  const log = logger.child({ tenantId: job.tenantId, leadId: job.leadId, conversationId: job.conversationId, correlationId: job.correlationId })
+  const log = logger.child({
+    tenantId: job.tenantId,
+    leadId: job.leadId,
+    conversationId: job.conversationId,
+    correlationId: job.correlationId,
+  })
 
   // 1. Load entities
-  const [tenant] = await db
-    .select()
-    .from(tenants)
-    .where(eq(tenants.id, job.tenantId))
-    .limit(1)
+  const [tenant] = await db.select().from(tenants).where(eq(tenants.id, job.tenantId)).limit(1)
 
   if (!tenant) {
     log.error('Tenant not found, skipping job')
@@ -172,7 +180,10 @@ export async function processMessage(
 
   // 4. Sanitize input
   const sanitizationResult = sanitizeInput(inboundMessage.content)
-  log.info({ flags: sanitizationResult.flags, isClean: sanitizationResult.isClean }, 'Input sanitized')
+  log.info(
+    { flags: sanitizationResult.flags, isClean: sanitizationResult.isClean },
+    'Input sanitized',
+  )
 
   // Update message with injection flags
   if (sanitizationResult.flags.length > 0) {
@@ -208,7 +219,11 @@ export async function processMessage(
     }))
 
   const systemPrompt = buildSystemPrompt(tenantForPrompt)
-  const userPrompt = buildUserPrompt(leadForPrompt, historyMessages, sanitizationResult.cleanMessage)
+  const userPrompt = buildUserPrompt(
+    leadForPrompt,
+    historyMessages,
+    sanitizationResult.cleanMessage,
+  )
 
   // 7. Call AI
   let rawText: string
@@ -258,12 +273,15 @@ export async function processMessage(
 
   // 8. Parse AI response
   const parsed = parseAIResponse(rawText)
-  log.info({
-    intent: parsed.intent,
-    confidence: parsed.confidence,
-    shouldHandoff: parsed.shouldHandoff,
-    scoreDelta: parsed.scoreDelta,
-  }, 'AI response parsed')
+  log.info(
+    {
+      intent: parsed.intent,
+      confidence: parsed.confidence,
+      shouldHandoff: parsed.shouldHandoff,
+      scoreDelta: parsed.scoreDelta,
+    },
+    'AI response parsed',
+  )
 
   // 9. Validate response
   const validation = validateResponse(parsed.response, tenantForPrompt)
@@ -308,11 +326,14 @@ export async function processMessage(
     parsed.scoreDelta,
     'ai',
   )
-  log.info({
-    oldScore: currentScore,
-    newScore: scoreResult.newScore,
-    stageChanged: scoreResult.stageChanged,
-  }, 'Score updated')
+  log.info(
+    {
+      oldScore: currentScore,
+      newScore: scoreResult.newScore,
+      stageChanged: scoreResult.stageChanged,
+    },
+    'Score updated',
+  )
 
   // 12. Evaluate handoff decision
   const handoffDecision = evaluateHandoff({
@@ -341,17 +362,52 @@ export async function processMessage(
   // 13. Send message via channel adapter
   const adapter = resolveChannelAdapter(tenant)
   if (lead.phone) {
+    let deliveryStatus: 'sent' | 'failed' = 'failed'
+    let externalId: string | undefined
+
     try {
-      await withRetry(() => adapter.sendMessage(lead.phone!, responseToSend), {
+      const result = await withRetry(() => adapter.sendMessage(lead.phone!, responseToSend), {
         maxRetries: 2,
         baseDelay: 500,
         onRetry: (error, attempt, delayMs) => {
           log.warn({ error, attempt, delayMs }, 'Channel send retry')
         },
       })
-      log.info('Outbound message sent via channel')
+
+      if (result.success) {
+        deliveryStatus = 'sent'
+        externalId = result.externalId
+        log.info({ externalId }, 'Outbound message sent via channel')
+      } else {
+        log.error({ error: result.error }, 'Channel adapter returned failure')
+      }
     } catch (error) {
-      log.error({ error }, 'Failed to send via channel adapter')
+      log.error({ error }, 'Failed to send via channel adapter (exception)')
+    }
+
+    // Update delivery status on the most recent queued outbound message
+    const [outboundMsg] = await db
+      .select({ id: messages.id })
+      .from(messages)
+      .where(
+        and(
+          eq(messages.tenantId, job.tenantId),
+          eq(messages.conversationId, job.conversationId),
+          eq(messages.direction, 'outbound'),
+          eq(messages.deliveryStatus, 'queued'),
+        ),
+      )
+      .orderBy(desc(messages.createdAt))
+      .limit(1)
+
+    if (outboundMsg) {
+      await db
+        .update(messages)
+        .set({
+          deliveryStatus,
+          ...(externalId ? { externalId } : {}),
+        })
+        .where(eq(messages.id, outboundMsg.id))
     }
   }
 
@@ -462,4 +518,3 @@ async function saveOutboundMessage(
     correlationId: job.correlationId,
   })
 }
-

@@ -13,7 +13,7 @@ import {
 async function seed() {
   console.log('Seeding database...')
 
-  // Idempotent: skip if demo tenant already exists
+  // Idempotent: skip Z-API demo tenant if already exists
   const existing = await db
     .select({ id: tenants.id })
     .from(tenants)
@@ -21,10 +21,8 @@ async function seed() {
     .limit(1)
 
   if (existing.length > 0) {
-    console.log('Seed data already exists (slug: loja-demo). Skipping.')
-    await closeDb()
-    return
-  }
+    console.log('Z-API demo data already exists (slug: loja-demo). Skipping.')
+  } else {
 
   // 1. Tenant
   const [tenant] = await db
@@ -395,6 +393,70 @@ async function seed() {
     notified100: false,
   })
   console.log('  Monthly lead counts created: 1')
+  } // end Z-API demo tenant
+
+  // 8. Meta Cloud API dev tenant (idempotent)
+  const existingMeta = await db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(eq(tenants.slug, 'loja-meta-dev'))
+    .limit(1)
+
+  if (existingMeta.length > 0) {
+    console.log('Meta tenant already exists (slug: loja-meta-dev). Skipping.')
+  } else {
+    const metaToken = process.env.META_WHATSAPP_TOKEN
+    const metaVerifyToken = process.env.META_WHATSAPP_VERIFY_TOKEN
+    const metaAppSecret = process.env.META_APP_SECRET
+
+    if (metaToken && metaVerifyToken && metaAppSecret) {
+      const [metaTenant] = await db
+        .insert(tenants)
+        .values({
+          name: 'Loja Meta Dev',
+          slug: 'loja-meta-dev',
+          plan: 'pro',
+          leadsLimit: 500,
+          agentsLimit: 3,
+          businessName: 'Loja Demo Eletrônicos (Meta)',
+          businessDescription:
+            'Loja de eletrônicos e acessórios com entrega rápida em São Paulo. Trabalhamos com smartphones, notebooks, tablets e acessórios das melhores marcas.',
+          productsInfo:
+            'iPhone 15 Pro Max - R$ 8.999\nSamsung Galaxy S24 Ultra - R$ 7.499\nMacBook Air M3 - R$ 12.999\nAirPods Pro 2 - R$ 1.899\nCapinhas a partir de R$ 49,90',
+          pricingInfo:
+            'Parcelamos em até 12x sem juros no cartão. PIX com 5% de desconto. Frete grátis acima de R$ 299.',
+          faq: 'Prazo de entrega: 1-3 dias úteis para SP capital, 3-7 dias para demais regiões.\nTroca e devolução: até 7 dias após recebimento.\nGarantia: 12 meses de fábrica + 3 meses da loja.',
+          businessHours: 'Segunda a sexta: 9h às 18h. Sábado: 9h às 13h.',
+          paymentMethods: 'PIX, cartão de crédito (Visa, Mastercard, Elo), boleto bancário',
+          customInstructions:
+            'Sempre oferecer frete grátis quando o pedido ultrapassar R$ 299. Mencionar promoções ativas.',
+          whatsappProvider: 'meta_cloud',
+          whatsappConfig: {
+            phoneNumberId: '1049663858224316',
+            token: metaToken,
+            appSecret: metaAppSecret,
+            verifyToken: metaVerifyToken,
+          },
+          billingStatus: 'active',
+          trialEndsAt: new Date('2026-12-31'),
+        })
+        .returning()
+
+      await db.insert(agents).values({
+        tenantId: metaTenant.id,
+        name: 'Admin Meta',
+        email: 'admin@loja-meta.dev',
+        passwordHash: '$2b$10$placeholder_hash_meta_not_real',
+        role: 'admin',
+        isActive: true,
+        isOnline: true,
+      })
+
+      console.log(`  Meta tenant created: ${metaTenant.name} (${metaTenant.id})`)
+    } else {
+      console.log('  Skipping Meta tenant: META_* env vars not set')
+    }
+  }
 
   console.log('Seed complete.')
   await closeDb()
