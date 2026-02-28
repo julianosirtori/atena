@@ -17,39 +17,41 @@ async function seed() {
   const existing = await db
     .select({ id: tenants.id })
     .from(tenants)
-    .where(eq(tenants.slug, 'loja-demo'))
+    .where(eq(tenants.slug, 'milena-aranha-fisio'))
     .limit(1)
 
   if (existing.length > 0) {
-    console.log('Z-API demo data already exists (slug: loja-demo). Skipping.')
+    console.log('Z-API demo data already exists (slug: milena-aranha-fisio). Skipping.')
   } else {
 
   // 1. Tenant
   const [tenant] = await db
     .insert(tenants)
     .values({
-      name: 'Loja Demo',
-      slug: 'loja-demo',
+      name: 'Milena Aranha Fisioterapia',
+      slug: 'milena-aranha-fisio',
       plan: 'pro',
       leadsLimit: 500,
       agentsLimit: 3,
-      businessName: 'Loja Demo Eletrônicos',
+      businessName: 'Milena Aranha — Fisioterapia & Cursos',
       businessDescription:
-        'Loja de eletrônicos e acessórios com entrega rápida em São Paulo. Trabalhamos com smartphones, notebooks, tablets e acessórios das melhores marcas.',
+        'Fisioterapia especializada em dor crônica e persistente, com atendimento domiciliar ou em consultório em Maringá-PR. A Dra. Milena Aranha é fisioterapeuta, mestre em Promoção da Saúde (Unicesumar, 2023) e doutoranda pela Universidad de Salamanca (Espanha), com bolsa sanduíche CAPES. Professora universitária e pesquisadora com 8+ artigos publicados em periódicos nacionais e internacionais. Abordagem baseada em evidências científicas, com foco em educação em dor, terapia manual suave e exercícios terapêuticos — sem dor desnecessária. Também oferece cursos profissionalizantes para fisioterapeutas na área de dor e terapia manual.',
       productsInfo:
-        'iPhone 15 Pro Max - R$ 8.999\nSamsung Galaxy S24 Ultra - R$ 7.499\nMacBook Air M3 - R$ 12.999\nAirPods Pro 2 - R$ 1.899\nCapinhas a partir de R$ 49,90',
+        'SERVIÇOS DE FISIOTERAPIA:\n- Atendimento individual de fisioterapia (domiciliar ou em consultório)\n- Liberação miofascial e quiropraxia\n- Educação em neurociência da dor\n- Programa de exercícios terapêuticos\n- Método RMA Care (raciocínio clínico avançado para modulação da dor)\n- Agulhamento a seco (dry needling)\n- Ventosaterapia\n- Osteopatia\n- Pilates\n\nCURSOS PARA PROFISSIONAIS:\n- Método RMA Care — Raciocínio clínico avançado para modulação da dor\n- Liberação Miofascial — Técnicas baseadas em evidências\n- Dry Needling — Agulhamento a seco com raciocínio clínico\n- Ventosaterapia — Ventosa integrada à prática clínica moderna',
       pricingInfo:
-        'Parcelamos em até 12x sem juros no cartão. PIX com 5% de desconto. Frete grátis acima de R$ 299.',
-      faq: 'Prazo de entrega: 1-3 dias úteis para SP capital, 3-7 dias para demais regiões.\nTroca e devolução: até 7 dias após recebimento.\nGarantia: 12 meses de fábrica + 3 meses da loja.',
-      businessHours: 'Segunda a sexta: 9h às 18h. Sábado: 9h às 13h.',
-      paymentMethods: 'PIX, cartão de crédito (Visa, Mastercard, Elo), boleto bancário',
+        'Valores sob consulta. Entre em contato pelo WhatsApp para informações sobre valores de sessões e cursos.',
+      faq: 'O tratamento dói? Não! Nossa abordagem combina educação em dor, terapia manual suave e exercícios terapêuticos, sem pressão excessiva ou hematomas.\nOnde é o atendimento? Atendemos em consultório em Maringá-PR ou a domicílio, conforme sua preferência.\nQual o endereço do consultório? Rua Doutor Saulo Porto Virmond, 128, Maringá-PR, CEP 87005-090.\nPara quem são os cursos? Para fisioterapeutas e profissionais da saúde que buscam formação em manejo da dor baseado em evidências.\nComo agendar uma sessão? Entre em contato pelo WhatsApp (44) 99989-1160 ou pelo Instagram @fisio.milenaaranha.',
+      businessHours: 'Segunda a Sexta: horário comercial. Consulte disponibilidade de horários pelo WhatsApp.',
+      paymentMethods: 'Consultar formas de pagamento pelo WhatsApp.',
       customInstructions:
-        'Sempre oferecer frete grátis quando o pedido ultrapassar R$ 299. Mencionar promoções ativas.',
+        'Responda de forma natural e humana, como uma secretária simpática e atenciosa da Milena responderia no WhatsApp. Use linguagem acolhedora e próxima, mas mantenha o profissionalismo. Pode usar expressões naturais do dia a dia. Evite parecer robótico ou formal demais.\n\nA filosofia principal é: "o tratamento não precisa doer". Sempre reforce essa mensagem quando relevante.\n\nEspecialidades: dor crônica/persistente, liberação miofascial, agulhamento a seco, ventosaterapia, osteopatia, pilates.\n\nQuando perguntarem sobre valores, diga que os valores são passados diretamente pela Milena e ofereça agendar uma avaliação.\n\nQuando perguntarem sobre cursos, explique brevemente e direcione para mais informações.\n\nSempre que possível, tente agendar uma avaliação inicial.\n\nSite: https://fisiomilenaaranha.com\nInstagram: @fisio.milenaaranha\nEndereço: Rua Dr. Saulo Porto Virmond, 128, Maringá-PR',
+      fallbackMessage:
+        'Oi! Obrigada pelo contato 😊 No momento não consegui entender sua mensagem. Vou pedir para a Milena te responder assim que possível, tá? Se for urgente, pode ligar no (44) 99989-1160.',
       whatsappProvider: 'zapi',
       whatsappConfig: {
         instanceId: process.env.ZAPI_INSTANCE_ID || 'demo-instance-id',
         token: process.env.ZAPI_TOKEN || 'demo-token',
-        phone: '5511900000000',
+        phone: '5544999891160',
       },
       billingStatus: 'active',
       trialEndsAt: new Date('2026-01-15'),
