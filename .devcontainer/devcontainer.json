@@ -8,7 +8,9 @@
       "version": "20"
     },
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {}
   },
   "mounts": [
     {
@@ -46,7 +48,7 @@
     "LINEAR_API_TOKEN": "${localEnv:LINEAR_API_TOKEN}"
   },
   "postCreateCommand": "npm install && (cp -n .env.example .env || true) && npm install -g @anthropic-ai/claude-code linearis",
-  "postStartCommand": "echo '✅ Atena dev environment ready. CLIs: node, gh, claude, linearis. Run: npm run dev'",
+  "postStartCommand": "echo '✅ Atena dev environment ready. CLIs: node, gh, claude, linearis, aws, terraform. Run: npm run dev'",
   "forwardPorts": [3000],
   "portsAttributes": {
     "3000": { "label": "Atena API", "onAutoForward": "notify" },

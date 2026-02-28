@@ -336,7 +336,7 @@ export async function processMessage(
         externalId = result.externalId
         log.info({ externalId }, 'Outbound message sent via channel')
       } else {
-        log.error({ error: result.error }, 'Channel adapter returned failure')
+        log.error({ error: result.error, phone: lead.phone }, 'Channel adapter returned failure')
       }
     } catch (error) {
       log.error({ error }, 'Failed to send via channel adapter (exception)')
@@ -423,7 +423,7 @@ export async function processMessage(
     .update(conversations)
     .set({
       aiMessagesCount: (conversation.aiMessagesCount ?? 0) + 1,
-      aiModel: 'gpt-4o',
+      aiModel: env.AI_MODEL,
       updatedAt: new Date(),
     })
     .where(eq(conversations.id, job.conversationId))

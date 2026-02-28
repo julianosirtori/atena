@@ -209,7 +209,8 @@ export class ZApiAdapter implements ChannelAdapter {
       })
 
       if (!response.ok) {
-        return { success: false, error: `Z-API error: ${response.status}` }
+        const body = await response.text()
+        return { success: false, error: `Z-API error: ${response.status} — ${body}` }
       }
 
       const result = (await response.json()) as { messageId?: string }
@@ -238,7 +239,8 @@ export class ZApiAdapter implements ChannelAdapter {
       })
 
       if (!response.ok) {
-        return { success: false, error: `Z-API error: ${response.status}` }
+        const body = await response.text()
+        return { success: false, error: `Z-API error: ${response.status} — ${body}` }
       }
 
       const result = (await response.json()) as { messageId?: string }

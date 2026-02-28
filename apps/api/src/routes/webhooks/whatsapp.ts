@@ -58,7 +58,7 @@ export const whatsappWebhookRoute: FastifyPluginAsync = async (server) => {
   })
 
   // GET — Meta webhook verification challenge
-  server.get('/webhooks/whatsapp', async (request, reply) => {
+  server.get('/webhooks/whatsapp', { config: { rateLimit: false } }, async (request, reply) => {
     const query = request.query as {
       'hub.mode'?: string
       'hub.verify_token'?: string
@@ -79,7 +79,7 @@ export const whatsappWebhookRoute: FastifyPluginAsync = async (server) => {
   })
 
   // POST — Dual-provider webhook handler
-  server.post('/webhooks/whatsapp', async (request, reply) => {
+  server.post('/webhooks/whatsapp', { config: { rateLimit: false } }, async (request, reply) => {
     const correlationId = randomUUID()
     reply.header('X-Correlation-ID', correlationId)
 
