@@ -35,7 +35,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-4 lg:p-6 max-w-3xl mx-auto space-y-4">
+    <div className="h-full overflow-y-auto p-4 lg:p-6 max-w-3xl mx-auto space-y-4">
       <PageHeader title="Configurações" subtitle={tenant.businessName} />
 
       {sections.map((section) => {

@@ -59,7 +59,7 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className="p-4 lg:p-6 space-y-4">
+    <div className="h-full overflow-y-auto p-4 lg:p-6 space-y-4">
       <PageHeader
         title="Leads"
         subtitle={meta ? `${meta.total} leads` : undefined}

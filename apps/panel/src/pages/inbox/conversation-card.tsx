@@ -35,7 +35,7 @@ export function ConversationCard({ conversation, isActive, onClick }: Conversati
             {conversation.leadName ?? formatPhone(conversation.leadPhone)}
           </span>
           <span className="shrink-0 text-[10px] text-warm-400">
-            {formatRelativeTime(conversation.updatedAt)}
+            {formatRelativeTime(conversation.createdAt)}
           </span>
         </div>
         <div className="mt-0.5 flex items-center gap-1.5">

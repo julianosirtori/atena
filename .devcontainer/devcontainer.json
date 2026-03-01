@@ -49,9 +49,10 @@
   },
   "postCreateCommand": "npm install && (cp -n .env.example .env || true) && npm install -g @anthropic-ai/claude-code linearis",
   "postStartCommand": "echo '✅ Atena dev environment ready. CLIs: node, gh, claude, linearis, aws, terraform. Run: npm run dev'",
-  "forwardPorts": [3000],
+  "forwardPorts": [3000, 5173],
   "portsAttributes": {
     "3000": { "label": "Atena API", "onAutoForward": "notify" },
+    "5173": { "label": "Atena Panel", "onAutoForward": "notify" },
     "5433": { "label": "PostgreSQL", "onAutoForward": "ignore" },
     "6379": { "label": "Redis", "onAutoForward": "ignore" }
   }

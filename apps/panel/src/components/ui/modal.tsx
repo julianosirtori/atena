@@ -28,8 +28,8 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       ref={dialogRef}
       onClose={onClose}
       className={cn(
-        'w-full max-w-lg rounded-2xl border-0 bg-white p-0 shadow-xl backdrop:bg-black/40 backdrop:backdrop-blur-sm',
-        'max-md:mt-auto max-md:mb-0 max-md:max-w-full max-md:rounded-b-none max-md:animate-[slideUp_0.2s_ease-out]',
+        'fixed inset-0 m-auto w-full max-w-lg rounded-2xl border-0 bg-white p-0 shadow-xl backdrop:bg-black/40 backdrop:backdrop-blur-sm',
+        'max-md:fixed max-md:inset-auto max-md:bottom-0 max-md:left-0 max-md:right-0 max-md:m-0 max-md:max-w-full max-md:rounded-b-none max-md:animate-[slideUp_0.2s_ease-out]',
         className,
       )}
     >

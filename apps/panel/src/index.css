@@ -27,6 +27,11 @@
   --color-amber-900: #78350F;
 }
 
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-warm-50);
@@ -42,4 +47,13 @@ h1, h2, h3, h4, h5, h6 {
 /* Safe area for PWA */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide scrollbar while keeping scroll functional */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

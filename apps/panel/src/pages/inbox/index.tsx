@@ -11,6 +11,7 @@ export default function InboxPage() {
   const { conversationId } = useParams()
   const navigate = useNavigate()
   const [selected, setSelected] = useState<ConversationWithLead | null>(null)
+  const [showSidebar, setShowSidebar] = useState(false)
 
   const activeId = conversationId ?? selected?.id
 
@@ -22,7 +23,7 @@ export default function InboxPage() {
   const showChat = !!activeId && !!selected
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full overflow-hidden">
       {/* Conversation list: hidden on mobile when chat is open */}
       <ConversationList
         activeId={activeId}
@@ -39,8 +40,14 @@ export default function InboxPage() {
           <ChatView
             conversation={selected}
             className={cn('flex-1 min-w-0', !showChat && 'hidden sm:flex')}
+            showSidebar={showSidebar}
+            onToggleSidebar={() => setShowSidebar((v) => !v)}
           />
-          <ConversationDetailSidebar conversation={selected} />
+          <ConversationDetailSidebar
+            conversation={selected}
+            open={showSidebar}
+            onClose={() => setShowSidebar(false)}
+          />
         </>
       ) : (
         <div className="hidden flex-1 items-center justify-center sm:flex">

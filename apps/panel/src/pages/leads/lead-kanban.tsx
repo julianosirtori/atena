@@ -85,7 +85,7 @@ export function LeadKanban({ leads }: LeadKanbanProps) {
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-3 overflow-x-auto pb-4">
+      <div className="flex h-[calc(100vh-280px)] gap-3 overflow-x-auto pb-4">
         {stages.map((stage) => {
           const config = STAGE_CONFIG[stage]
           const stageLeads = grouped[stage]
@@ -99,7 +99,7 @@ export function LeadKanban({ leads }: LeadKanbanProps) {
             >
               <div
                 id={stage}
-                className="flex w-64 shrink-0 flex-col rounded-xl bg-warm-50 p-2"
+                className="flex w-64 shrink-0 flex-col rounded-xl bg-warm-50 p-2 max-h-full"
               >
                 <div className="mb-2 flex items-center justify-between px-1">
                   <span className={cn('text-xs font-semibold uppercase', config.color)}>

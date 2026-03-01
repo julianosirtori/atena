@@ -9,7 +9,7 @@ interface TabsProps<T extends string> {
 
 export function Tabs<T extends string>({ value, onChange, tabs, className }: TabsProps<T>) {
   return (
-    <div className={cn('flex gap-1 overflow-x-auto border-b border-warm-200', className)}>
+    <div className={cn('flex gap-1 overflow-x-auto border-b border-warm-200 scrollbar-hide', className)}>
       {tabs.map((tab) => (
         <button
           key={tab.value}

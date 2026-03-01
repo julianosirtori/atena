@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, PanelRightOpen, PanelRightClose } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMessages } from '@/hooks/use-conversations'
 import { MessageBubble } from './message-bubble'
@@ -13,9 +13,11 @@ import { STATUS_CONFIG } from '@/lib/constants'
 interface ChatViewProps {
   conversation: ConversationWithLead
   className?: string
+  showSidebar?: boolean
+  onToggleSidebar?: () => void
 }
 
-export function ChatView({ conversation, className }: ChatViewProps) {
+export function ChatView({ conversation, className, showSidebar, onToggleSidebar }: ChatViewProps) {
   const navigate = useNavigate()
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useMessages(
     conversation.id,
@@ -24,8 +26,8 @@ export function ChatView({ conversation, className }: ChatViewProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
 
-  // All messages flattened and reversed (oldest first)
-  const allMessages = data?.pages.flatMap((p) => p.data).reverse() ?? []
+  // Pages are newest-first from infinite query; reverse pages to get oldest-first, then flatMap preserves ASC within each page
+  const allMessages = data?.pages ? [...data.pages].reverse().flatMap((p) => p.data) : []
 
   // Scroll to bottom on initial load
   useEffect(() => {
@@ -64,6 +66,15 @@ export function ChatView({ conversation, className }: ChatViewProps) {
             <Badge color={statusCfg.color} bg={statusCfg.bg}>{statusCfg.label}</Badge>
           </div>
         </div>
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-warm-500 transition-colors hover:bg-warm-100 hover:text-warm-700"
+            title={showSidebar ? 'Fechar detalhes' : 'Ver detalhes'}
+          >
+            {showSidebar ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
+          </button>
+        )}
       </div>
 
       {/* Messages */}

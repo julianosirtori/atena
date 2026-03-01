@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const totalConversations = Object.values(d.conversationsByStatus).reduce((a, b) => a + b, 0)
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 max-w-6xl mx-auto">
+    <div className="h-full overflow-y-auto p-4 lg:p-6 space-y-6 max-w-6xl mx-auto">
       <PageHeader title="Dashboard" />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
