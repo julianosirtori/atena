@@ -78,7 +78,7 @@ export function LeadEventTimeline({ leadId }: LeadEventTimelineProps) {
         return (
           <div key={event.id} className="relative flex gap-3">
             <div
-              className={`absolute -left-5 flex h-6 w-6 items-center justify-center rounded-full ${colorClass}`}
+              className={`absolute -left-8 flex h-6 w-6 items-center justify-center rounded-full ${colorClass}`}
             >
               <Icon size={12} />
             </div>
