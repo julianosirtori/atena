@@ -1,0 +1,16 @@
+{
+  "name": "Atena",
+  "short_name": "Atena",
+  "description": "CRM inteligente para pequenos negócios",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#D97706",
+  "background_color": "#FAFAF8",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+
+  --color-warm-50: #FAFAF8;
+  --color-warm-100: #F5F5F0;
+  --color-warm-200: #E8E8E0;
+  --color-warm-300: #D4D4C8;
+  --color-warm-400: #A8A89C;
+  --color-warm-500: #737366;
+  --color-warm-600: #52524A;
+  --color-warm-700: #3D3D37;
+  --color-warm-800: #292925;
+  --color-warm-900: #1A1A17;
+
+  --color-amber-50: #FFFBEB;
+  --color-amber-100: #FEF3C7;
+  --color-amber-200: #FDE68A;
+  --color-amber-300: #FCD34D;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+  --color-amber-600: #D97706;
+  --color-amber-700: #B45309;
+  --color-amber-800: #92400E;
+  --color-amber-900: #78350F;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-warm-50);
+  color: var(--color-warm-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Safe area for PWA */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
