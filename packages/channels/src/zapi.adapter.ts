@@ -5,6 +5,7 @@ import type {
   SendOptions,
   MediaPayload,
   DeliveryResult,
+  HealthCheckResult,
 } from './channel.interface.js'
 
 // Z-API ReceivedCallback common fields (present on all webhook payloads)
@@ -253,5 +254,23 @@ export class ZApiAdapter implements ChannelAdapter {
   validateWebhook(req: FastifyRequest): boolean {
     const token = (req.headers['client-token'] as string) || ''
     return token === this.webhookSecret
+  }
+
+  async checkHealth(): Promise<HealthCheckResult> {
+    const url = `https://api.z-api.io/instances/${this.instanceId}/token/${this.token}/status`
+
+    const headers: Record<string, string> = {}
+    if (this.clientToken) headers['Client-Token'] = this.clientToken
+
+    try {
+      const response = await fetch(url, { headers })
+      if (!response.ok) {
+        return { online: false, error: `Z-API status check failed: ${response.status}` }
+      }
+      const data = (await response.json()) as { connected?: boolean; error?: string }
+      return { online: !!data.connected, error: data.error }
+    } catch (err) {
+      return { online: false, error: (err as Error).message }
+    }
   }
 }

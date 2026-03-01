@@ -254,6 +254,18 @@ export function getDashboard(tenantId: string) {
   return request<SingleResponse<DashboardData>>(`/api/v1/tenants/${tenantId}/dashboard`)
 }
 
+// Channel Status
+export interface ChannelStatusResponse {
+  whatsapp: { status: 'online' | 'offline'; error?: string }
+  instagram: { status: 'online' | 'offline'; error?: string }
+}
+
+export function getChannelStatus(tenantId: string) {
+  return request<SingleResponse<ChannelStatusResponse>>(
+    `/api/v1/tenants/${tenantId}/channel-status`,
+  )
+}
+
 // Campaigns
 export function getCampaigns(
   tenantId: string,

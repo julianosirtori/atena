@@ -5,6 +5,7 @@ import type {
   SendOptions,
   MediaPayload,
   DeliveryResult,
+  HealthCheckResult,
 } from './channel.interface.js'
 import crypto from 'crypto'
 
@@ -91,5 +92,9 @@ export class MockAdapter implements ChannelAdapter {
 
   clearMessages(): void {
     this.sentMessages = []
+  }
+
+  async checkHealth(): Promise<HealthCheckResult> {
+    return { online: true }
   }
 }

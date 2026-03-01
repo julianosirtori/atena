@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ArrowLeft, PanelRightOpen, PanelRightClose } from 'lucide-react'
+import { ArrowLeft, PanelRightOpen, PanelRightClose, WifiOff } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMessages, useSendMessage } from '@/hooks/use-conversations'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { useAgents } from '@/hooks/use-agents'
+import { useChannelStatus } from '@/hooks/use-tenant'
 import { MessageBubble } from './message-bubble'
 import { MessageInput } from './message-input'
 import { QuickReplyBar } from './quick-reply-bar'
@@ -35,9 +36,11 @@ export function ChatView({ conversation, className, showSidebar, onToggleSidebar
   const topSentinelRef = useRef<HTMLDivElement>(null)
 
   const firstAgent = agentsData?.data?.[0]
-  const quickReplies = tenant?.quickReplies ?? []
   const canSend = conversation.status === 'human' || conversation.status === 'waiting_human'
+  const { data: channelStatusData } = useChannelStatus({ enabled: canSend })
+  const quickReplies = tenant?.quickReplies ?? []
   const showQuickReplies = conversation.status === 'human' && quickReplies.length > 0
+  const whatsappOffline = channelStatusData?.data?.whatsapp?.status === 'offline'
 
   // Pages are newest-first from infinite query; reverse pages to get oldest-first, then flatMap preserves ASC within each page
   const allMessages = data?.pages ? [...data.pages].reverse().flatMap((p) => p.data) : []
@@ -110,6 +113,14 @@ export function ChatView({ conversation, className, showSidebar, onToggleSidebar
           allMessages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
         )}
       </div>
+
+      {/* Channel offline banner */}
+      {canSend && whatsappOffline && (
+        <div className="flex items-center gap-2 border-t border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+          <WifiOff size={14} className="shrink-0" />
+          <span>WhatsApp indisponível. Mensagens não serão entregues até a reconexão.</span>
+        </div>
+      )}
 
       {/* Quick replies + Message input */}
       {canSend && (

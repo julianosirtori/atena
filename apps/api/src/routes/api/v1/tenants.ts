@@ -1,6 +1,8 @@
 import { FastifyPluginAsync } from 'fastify'
 import { db, tenants } from '@atena/database'
 import { eq } from 'drizzle-orm'
+import { ZApiAdapter, MetaWhatsAppAdapter, MockAdapter } from '@atena/channels'
+import type { ChannelAdapter } from '@atena/channels'
 import { NotFoundError, ValidationError } from '../../../lib/errors.js'
 import { tenantUpdateSchema, simulateAiSchema } from '../../../lib/schemas.js'
 
@@ -96,6 +98,56 @@ export const tenantsRoutes: FastifyPluginAsync = async (server) => {
       const mock = mockResponses[Math.floor(Math.random() * mockResponses.length)]
 
       return { data: mock }
+    },
+  )
+
+  // GET /tenants/:tenantId/channel-status
+  server.get<{ Params: { tenantId: string } }>(
+    '/tenants/:tenantId/channel-status',
+    async (request) => {
+      const { tenantId } = request.params
+      const [tenant] = await db
+        .select()
+        .from(tenants)
+        .where(eq(tenants.id, tenantId))
+        .limit(1)
+      if (!tenant) throw new NotFoundError('Tenant')
+
+      const whatsappConfig = (tenant.whatsappConfig ?? {}) as Record<string, string>
+
+      let adapter: ChannelAdapter
+      if (tenant.whatsappProvider === 'meta_cloud') {
+        adapter = new MetaWhatsAppAdapter({
+          token: whatsappConfig.token ?? '',
+          phoneNumberId: whatsappConfig.phoneNumberId ?? '',
+          appSecret: whatsappConfig.appSecret ?? '',
+          verifyToken: whatsappConfig.verifyToken ?? '',
+        })
+      } else if (
+        tenant.whatsappProvider === 'zapi' &&
+        whatsappConfig.instanceId &&
+        whatsappConfig.token
+      ) {
+        adapter = new ZApiAdapter({
+          instanceId: whatsappConfig.instanceId,
+          token: whatsappConfig.token,
+          webhookSecret: whatsappConfig.webhookSecret ?? '',
+          clientToken: whatsappConfig.clientToken,
+        })
+      } else {
+        adapter = new MockAdapter()
+      }
+
+      const whatsappStatus = adapter.checkHealth
+        ? await adapter.checkHealth()
+        : { online: true }
+
+      return {
+        data: {
+          whatsapp: { status: whatsappStatus.online ? 'online' : 'offline', error: whatsappStatus.error },
+          instagram: { status: 'offline' as const, error: 'Instagram não configurado' },
+        },
+      }
     },
   )
 }

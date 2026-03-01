@@ -6,6 +6,7 @@ import type {
   SendOptions,
   MediaPayload,
   DeliveryResult,
+  HealthCheckResult,
 } from './channel.interface.js'
 
 interface MetaWebhookEntry {
@@ -190,5 +191,20 @@ export class MetaWhatsAppAdapter implements ChannelAdapter {
       return query['hub.challenge'] || null
     }
     return null
+  }
+
+  async checkHealth(): Promise<HealthCheckResult> {
+    const url = `https://graph.facebook.com/v25.0/${this.phoneNumberId}`
+    try {
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${this.token}` },
+      })
+      if (!response.ok) {
+        return { online: false, error: `Meta API status check failed: ${response.status}` }
+      }
+      return { online: true }
+    } catch (err) {
+      return { online: false, error: (err as Error).message }
+    }
   }
 }

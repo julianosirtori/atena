@@ -16,7 +16,9 @@ export function MessageInput({ onSend, isPending, value, onChange }: MessageInpu
     const el = textareaRef.current
     if (!el) return
     el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+    const capped = Math.min(el.scrollHeight, 120)
+    el.style.height = `${capped}px`
+    el.style.overflowY = el.scrollHeight > 120 ? 'auto' : 'hidden'
   }, [value])
 
   function handleSubmit() {
@@ -42,7 +44,7 @@ export function MessageInput({ onSend, isPending, value, onChange }: MessageInpu
         onKeyDown={handleKeyDown}
         placeholder="Digite sua mensagem..."
         rows={1}
-        className="flex-1 resize-none rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-warm-900 placeholder:text-warm-400 transition-colors focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+        className="flex-1 resize-none overflow-hidden rounded-lg border border-warm-200 bg-warm-50 px-3 py-2 text-sm text-warm-900 placeholder:text-warm-400 transition-colors focus:border-amber-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
       />
       <Button
         size="icon"

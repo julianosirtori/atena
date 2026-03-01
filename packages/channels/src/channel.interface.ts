@@ -29,9 +29,15 @@ export interface DeliveryResult {
   error?: string
 }
 
+export interface HealthCheckResult {
+  online: boolean
+  error?: string
+}
+
 export interface ChannelAdapter {
   parseInbound(payload: unknown): InboundMessage | null
   sendMessage(to: string, content: string, options?: SendOptions): Promise<DeliveryResult>
   sendMedia(to: string, media: MediaPayload): Promise<DeliveryResult>
   validateWebhook(req: FastifyRequest): boolean
+  checkHealth?(): Promise<HealthCheckResult>
 }

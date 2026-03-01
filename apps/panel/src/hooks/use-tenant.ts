@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getTenants, getTenant, updateTenant } from '@/lib/api'
+import { getTenants, getTenant, updateTenant, getChannelStatus } from '@/lib/api'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { toast } from 'sonner'
 
@@ -32,5 +32,16 @@ export function useUpdateTenant() {
     onError: () => {
       toast.error('Erro ao salvar configurações')
     },
+  })
+}
+
+export function useChannelStatus(options?: { enabled?: boolean; refetchInterval?: number }) {
+  const { tenantId } = useTenantContext()
+
+  return useQuery({
+    queryKey: ['channel-status', tenantId],
+    queryFn: () => getChannelStatus(tenantId!),
+    enabled: (options?.enabled ?? true) && !!tenantId,
+    refetchInterval: options?.refetchInterval ?? 60_000,
   })
 }

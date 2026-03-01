@@ -1,4 +1,4 @@
-export type { ChannelAdapter, InboundMessage, DeliveryResult, MediaPayload, SendOptions } from './channel.interface.js'
+export type { ChannelAdapter, InboundMessage, DeliveryResult, HealthCheckResult, MediaPayload, SendOptions } from './channel.interface.js'
 export { MockAdapter } from './mock.adapter.js'
 export type { MockMessage } from './mock.adapter.js'
 export { ZApiAdapter } from './zapi.adapter.js'
