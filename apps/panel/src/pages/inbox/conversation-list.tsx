@@ -5,6 +5,8 @@ import { ConversationCard } from './conversation-card'
 import { Tabs } from '@/components/ui/tabs'
 import { Spinner } from '@/components/ui/spinner'
 import { EmptyState } from '@/components/shared/empty-state'
+import { DemoBanner } from '@/components/shared/demo-banner'
+import { demoConversations, isDemoDismissed } from '@/lib/demo-data'
 import type { ConversationStatus, ConversationWithLead } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -34,7 +36,10 @@ export function ConversationList({ activeId, onSelect, className }: Conversation
   }
 
   const { data, isLoading } = useConversations(filters)
-  const conversations = data?.data ?? []
+  const [demoDismissed, setDemoDismissed] = useState(isDemoDismissed)
+  const realConversations = data?.data ?? []
+  const showDemo = !isLoading && realConversations.length === 0 && !demoDismissed
+  const conversations = showDemo ? demoConversations : realConversations
 
   const filtered = search
     ? conversations.filter(
@@ -61,6 +66,13 @@ export function ConversationList({ activeId, onSelect, className }: Conversation
 
       {/* Tabs */}
       <Tabs value={tab} onChange={setTab} tabs={tabs} className="px-3" />
+
+      {/* Demo banner */}
+      {showDemo && (
+        <div className="px-3 pt-2">
+          <DemoBanner onDismiss={() => setDemoDismissed(true)} />
+        </div>
+      )}
 
       {/* List */}
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">

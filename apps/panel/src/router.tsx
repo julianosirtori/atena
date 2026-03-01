@@ -8,6 +8,7 @@ const LeadsPage = lazy(() => import('@/pages/leads'))
 const LeadDetailPage = lazy(() => import('@/pages/leads/lead-detail'))
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const SettingsPage = lazy(() => import('@/pages/settings'))
+const ProtecoesPage = lazy(() => import('@/pages/protecoes'))
 const NotFoundPage = lazy(() => import('@/pages/not-found'))
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -75,6 +76,14 @@ export const router = createBrowserRouter([
         element: (
           <SuspenseWrapper>
             <SettingsPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'protecoes',
+        element: (
+          <SuspenseWrapper>
+            <ProtecoesPage />
           </SuspenseWrapper>
         ),
       },

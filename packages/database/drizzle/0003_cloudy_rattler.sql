@@ -1,0 +1,1 @@
+ALTER TABLE "tenants" ADD COLUMN "quick_replies" jsonb DEFAULT '[]'::jsonb;

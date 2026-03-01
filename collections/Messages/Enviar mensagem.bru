@@ -1,0 +1,61 @@
+meta {
+  name: Enviar mensagem
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/conversations/{{conversationId}}/messages
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "content": "Olá! Como posso ajudar?",
+    "senderAgentId": "{{agentId}}"
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("mensagem criada com direction outbound", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.direction).to.equal("outbound");
+    expect(body.data.senderType).to.equal("agent");
+  });
+}
+
+docs {
+  # Enviar mensagem
+
+  Envia uma mensagem do agente para o lead na conversa especificada.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `conversationId` | UUID | ID da conversa |
+
+  ## Body
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `content` | string | 1–5000 caracteres |
+  | `senderAgentId` | UUID | ID do agente remetente |
+
+  ## Resposta (200)
+
+  Retorna a mensagem criada com `direction: outbound` e `senderType: agent`.
+
+  ## Erros
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `400` | Erro de validação |
+}

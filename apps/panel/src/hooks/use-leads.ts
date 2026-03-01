@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getLeads, getLead, updateLead, getLeadEvents } from '@/lib/api'
+import { getLeads, getLead, updateLead, getLeadEvents, getAllEvents } from '@/lib/api'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { toast } from 'sonner'
 import type { Lead } from '@/types'
@@ -59,11 +59,20 @@ export function useUpdateLead() {
   })
 }
 
-export function useLeadEvents(leadId: string | undefined) {
+export function useLeadEvents(leadId: string | undefined, filters: { eventType?: string } = {}) {
   const { tenantId } = useTenantContext()
   return useQuery({
-    queryKey: ['lead-events', tenantId, leadId],
-    queryFn: () => getLeadEvents(tenantId!, leadId!),
+    queryKey: ['lead-events', tenantId, leadId, filters],
+    queryFn: () => getLeadEvents(tenantId!, leadId!, filters),
     enabled: !!tenantId && !!leadId,
+  })
+}
+
+export function useAllEvents(filters: { page?: number; limit?: number; eventType?: string } = {}) {
+  const { tenantId } = useTenantContext()
+  return useQuery({
+    queryKey: ['all-events', tenantId, filters],
+    queryFn: () => getAllEvents(tenantId!, filters),
+    enabled: !!tenantId,
   })
 }

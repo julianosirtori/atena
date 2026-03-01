@@ -62,6 +62,12 @@ export interface AiMetadata {
   tokens_used?: number
 }
 
+export interface QuickReply {
+  id: string
+  label: string
+  text: string
+}
+
 export interface UtmRule {
   utm_source?: string
   utm_medium?: string
@@ -90,6 +96,7 @@ export interface Tenant {
   instagramConfig: Record<string, unknown>
   telegramBotConfig: Record<string, unknown>
   handoffRules: HandoffRules
+  quickReplies: QuickReply[]
   billingStatus: BillingStatus
   trialEndsAt: string | null
   createdAt: string

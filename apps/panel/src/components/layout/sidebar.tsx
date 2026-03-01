@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Inbox, Users, BarChart3, Settings } from 'lucide-react'
+import { Inbox, Users, BarChart3, Settings, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TenantSelector } from './tenant-selector'
 
@@ -7,6 +7,7 @@ const links = [
   { to: '/inbox', label: 'Inbox', icon: Inbox },
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { to: '/protecoes', label: 'Proteções', icon: Shield },
   { to: '/settings', label: 'Configurações', icon: Settings },
 ]
 

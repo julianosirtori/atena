@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { Inbox, Users, BarChart3, Settings } from 'lucide-react'
+import { Inbox, Users, BarChart3, Settings, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const links = [
   { to: '/inbox', label: 'Inbox', icon: Inbox },
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/dashboard', label: 'Dashboard', icon: BarChart3 },
+  { to: '/protecoes', label: 'Proteção', icon: Shield },
   { to: '/settings', label: 'Config', icon: Settings },
 ]
 

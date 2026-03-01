@@ -1,8 +1,12 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { ArrowLeft, PanelRightOpen, PanelRightClose } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useMessages } from '@/hooks/use-conversations'
+import { useMessages, useSendMessage } from '@/hooks/use-conversations'
+import { useTenantContext } from '@/contexts/tenant-context'
+import { useAgents } from '@/hooks/use-agents'
 import { MessageBubble } from './message-bubble'
+import { MessageInput } from './message-input'
+import { QuickReplyBar } from './quick-reply-bar'
 import { Spinner } from '@/components/ui/spinner'
 import type { ConversationWithLead } from '@/types'
 import { cn, formatPhone } from '@/lib/utils'
@@ -19,12 +23,21 @@ interface ChatViewProps {
 
 export function ChatView({ conversation, className, showSidebar, onToggleSidebar }: ChatViewProps) {
   const navigate = useNavigate()
+  const { tenant } = useTenantContext()
+  const { data: agentsData } = useAgents()
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useMessages(
     conversation.id,
   )
+  const sendMessage = useSendMessage(conversation.id)
+  const [inputValue, setInputValue] = useState('')
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
+
+  const firstAgent = agentsData?.data?.[0]
+  const quickReplies = tenant?.quickReplies ?? []
+  const canSend = conversation.status === 'human' || conversation.status === 'waiting_human'
+  const showQuickReplies = conversation.status === 'human' && quickReplies.length > 0
 
   // Pages are newest-first from infinite query; reverse pages to get oldest-first, then flatMap preserves ASC within each page
   const allMessages = data?.pages ? [...data.pages].reverse().flatMap((p) => p.data) : []
@@ -97,6 +110,27 @@ export function ChatView({ conversation, className, showSidebar, onToggleSidebar
           allMessages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
         )}
       </div>
+
+      {/* Quick replies + Message input */}
+      {canSend && (
+        <>
+          {showQuickReplies && (
+            <QuickReplyBar
+              replies={quickReplies}
+              onSelect={(text) => setInputValue(text)}
+            />
+          )}
+          <MessageInput
+            value={inputValue}
+            onChange={setInputValue}
+            isPending={sendMessage.isPending}
+            onSend={(content) => {
+              if (!firstAgent) return
+              sendMessage.mutate({ content, senderAgentId: firstAgent.id })
+            }}
+          />
+        </>
+      )}
     </div>
   )
 }

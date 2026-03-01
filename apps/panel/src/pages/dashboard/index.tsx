@@ -6,6 +6,8 @@ import { MetricCard } from './metric-card'
 import { ConversationsChart } from './conversations-chart'
 import { TopIntentsList } from './top-intents-list'
 import { LeadsProgress } from './leads-progress'
+import { ActivityFeed } from './activity-feed'
+import { SystemStatus } from './system-status'
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboard()
@@ -43,7 +45,12 @@ export default function DashboardPage() {
         <TopIntentsList intents={d.topIntents} />
       </div>
 
-      <LeadsProgress current={d.leadsMonth} limit={d.leadsLimit} />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <LeadsProgress current={d.leadsMonth} limit={d.leadsLimit} />
+        <SystemStatus />
+      </div>
+
+      <ActivityFeed />
     </div>
   )
 }

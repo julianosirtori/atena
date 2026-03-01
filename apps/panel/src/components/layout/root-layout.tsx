@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { MobileNav } from './mobile-nav'
+import { OnboardingChecklist } from '@/components/shared/onboarding-checklist'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { Spinner } from '@/components/ui/spinner'
 
@@ -33,6 +34,7 @@ export function RootLayout() {
         <Outlet />
       </main>
       <MobileNav />
+      <OnboardingChecklist />
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { FastifyPluginAsync } from 'fastify'
 import { db, tenants } from '@atena/database'
 import { eq } from 'drizzle-orm'
 import { NotFoundError, ValidationError } from '../../../lib/errors.js'
-import { tenantUpdateSchema } from '../../../lib/schemas.js'
+import { tenantUpdateSchema, simulateAiSchema } from '../../../lib/schemas.js'
 
 export const tenantsRoutes: FastifyPluginAsync = async (server) => {
   // GET /tenants - list all tenants (for dropdown)
@@ -54,6 +54,48 @@ export const tenantsRoutes: FastifyPluginAsync = async (server) => {
         .returning()
 
       return { data: updated }
+    },
+  )
+
+  // POST /tenants/:id/simulate — AI simulation (does not create real data)
+  server.post<{ Params: { id: string }; Body: unknown }>(
+    '/tenants/:id/simulate',
+    async (request) => {
+      const { id } = request.params
+      const parsed = simulateAiSchema.safeParse(request.body)
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.flatten().fieldErrors)
+      }
+
+      const [tenant] = await db
+        .select()
+        .from(tenants)
+        .where(eq(tenants.id, id))
+        .limit(1)
+      if (!tenant) throw new NotFoundError('Tenant')
+
+      // Return a mock response when Claude API is not configured
+      const mockResponses = [
+        {
+          response: `Olá! Obrigado por entrar em contato com a ${tenant.businessName}. Como posso ajudar você hoje?`,
+          intent: 'greeting',
+          confidence: 0.95,
+        },
+        {
+          response: `Entendo que você tem interesse em nossos serviços. Posso explicar mais detalhes sobre o que oferecemos na ${tenant.businessName}. O que gostaria de saber?`,
+          intent: 'product_inquiry',
+          confidence: 0.88,
+        },
+        {
+          response: `Nosso horário de funcionamento é ${tenant.businessHours ?? 'de segunda a sexta, das 9h às 18h'}. Deseja agendar um horário?`,
+          intent: 'business_hours',
+          confidence: 0.92,
+        },
+      ]
+
+      const mock = mockResponses[Math.floor(Math.random() * mockResponses.length)]
+
+      return { data: mock }
     },
   )
 }

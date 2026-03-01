@@ -52,6 +52,15 @@ function qs(params: Record<string, unknown>): string {
   return s ? `?${s}` : ''
 }
 
+// Health
+export function getHealthStatus() {
+  const start = Date.now()
+  return request<{ status: string; timestamp: string }>('/health').then((data) => ({
+    ...data,
+    responseTimeMs: Date.now() - start,
+  }))
+}
+
 // Tenants
 export function getTenants() {
   return request<ListResponse<TenantListItem>>('/api/v1/tenants')
@@ -66,6 +75,14 @@ export function updateTenant(id: string, body: Partial<Tenant>) {
     method: 'PUT',
     body: JSON.stringify(body),
   })
+}
+
+// AI Simulator
+export function simulateAi(tenantId: string, body: { message: string }) {
+  return request<SingleResponse<{ response: string; intent: string; confidence: number }>>(
+    `/api/v1/tenants/${tenantId}/simulate`,
+    { method: 'POST', body: JSON.stringify(body) },
+  )
 }
 
 // Agents
@@ -165,6 +182,18 @@ export function getMessages(
 ) {
   return request<CursorResponse<Message>>(
     `/api/v1/tenants/${tenantId}/conversations/${conversationId}/messages${qs(params)}`,
+  )
+}
+
+// Send Message
+export function sendMessage(
+  tenantId: string,
+  conversationId: string,
+  body: { content: string; senderAgentId: string },
+) {
+  return request<SingleResponse<Message>>(
+    `/api/v1/tenants/${tenantId}/conversations/${conversationId}/messages`,
+    { method: 'POST', body: JSON.stringify(body) },
   )
 }
 

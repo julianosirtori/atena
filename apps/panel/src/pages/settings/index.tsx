@@ -1,19 +1,25 @@
 import { useState } from 'react'
-import { ChevronDown, Building2, Radio, PhoneForwarded, Users } from 'lucide-react'
+import { ChevronDown, Building2, Radio, PhoneForwarded, Users, CreditCard, MessageSquareText, Bot } from 'lucide-react'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { PageHeader } from '@/components/layout/page-header'
+import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { AiSimulatorModal } from '@/components/shared/ai-simulator-modal'
 import { cn } from '@/lib/utils'
 import { BusinessSection } from './business-section'
 import { ChannelsSection } from './channels-section'
 import { HandoffSection } from './handoff-section'
 import { AgentsSection } from './agents-section'
+import { BillingSection } from './billing-section'
+import { QuickRepliesSection } from './quick-replies-section'
 
 const sections = [
   { id: 'business', label: 'Dados do negócio', icon: Building2 },
   { id: 'channels', label: 'Canais', icon: Radio },
   { id: 'handoff', label: 'Regras de handoff', icon: PhoneForwarded },
   { id: 'agents', label: 'Agentes', icon: Users },
+  { id: 'quickReplies', label: 'Respostas rápidas', icon: MessageSquareText },
+  { id: 'billing', label: 'Plano e cobrança', icon: CreditCard },
 ] as const
 
 type SectionId = (typeof sections)[number]['id']
@@ -21,6 +27,7 @@ type SectionId = (typeof sections)[number]['id']
 export default function SettingsPage() {
   const { tenant } = useTenantContext()
   const [openSection, setOpenSection] = useState<SectionId | null>('business')
+  const [simulatorOpen, setSimulatorOpen] = useState(false)
 
   if (!tenant) {
     return (
@@ -36,7 +43,16 @@ export default function SettingsPage() {
 
   return (
     <div className="h-full overflow-y-auto p-4 lg:p-6 max-w-3xl mx-auto space-y-4">
-      <PageHeader title="Configurações" subtitle={tenant.businessName} />
+      <PageHeader
+        title="Configurações"
+        subtitle={tenant.businessName}
+        actions={
+          <Button variant="secondary" onClick={() => setSimulatorOpen(true)}>
+            <Bot size={16} />
+            Testar IA
+          </Button>
+        }
+      />
 
       {sections.map((section) => {
         const isOpen = openSection === section.id
@@ -66,11 +82,15 @@ export default function SettingsPage() {
                 {section.id === 'channels' && <ChannelsSection tenant={tenant} />}
                 {section.id === 'handoff' && <HandoffSection tenant={tenant} />}
                 {section.id === 'agents' && <AgentsSection />}
+                {section.id === 'quickReplies' && <QuickRepliesSection tenant={tenant} />}
+                {section.id === 'billing' && <BillingSection tenant={tenant} />}
               </div>
             )}
           </div>
         )
       })}
+
+      <AiSimulatorModal open={simulatorOpen} onClose={() => setSimulatorOpen(false)} />
     </div>
   )
 }

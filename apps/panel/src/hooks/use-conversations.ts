@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { getConversations, getConversation, getMessages, getNotes, createNote } from '@/lib/api'
+import { getConversations, getConversation, getMessages, getNotes, createNote, sendMessage } from '@/lib/api'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { toast } from 'sonner'
 
@@ -44,6 +44,23 @@ export function useNotes(conversationId: string | undefined) {
     queryKey: ['notes', tenantId, conversationId],
     queryFn: () => getNotes(tenantId!, conversationId!),
     enabled: !!tenantId && !!conversationId,
+  })
+}
+
+export function useSendMessage(conversationId: string) {
+  const qc = useQueryClient()
+  const { tenantId } = useTenantContext()
+
+  return useMutation({
+    mutationFn: (body: { content: string; senderAgentId: string }) =>
+      sendMessage(tenantId!, conversationId, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['messages', tenantId, conversationId] })
+      qc.invalidateQueries({ queryKey: ['conversations', tenantId] })
+    },
+    onError: () => {
+      toast.error('Erro ao enviar mensagem')
+    },
   })
 }
 

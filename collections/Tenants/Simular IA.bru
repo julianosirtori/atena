@@ -1,0 +1,60 @@
+meta {
+  name: Simular IA
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/simulate
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "message": "Olá, quais são os horários de atendimento?"
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("retorna response, intent e confidence", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("response");
+    expect(body.data).to.have.property("intent");
+    expect(body.data).to.have.property("confidence");
+  });
+}
+
+docs {
+  # Simular IA
+
+  Simula uma resposta da IA sem criar lead ou conversa real. Útil para testar o comportamento da IA.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Body
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `message` | string | 1–2000 caracteres |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "response": "Texto da resposta da IA",
+      "intent": "greeting",
+      "confidence": 0.95
+    }
+  }
+  ```
+}

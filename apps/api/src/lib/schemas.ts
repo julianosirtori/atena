@@ -19,6 +19,16 @@ export const tenantUpdateSchema = z.object({
   whatsappConfig: z.record(z.unknown()).optional(),
   instagramConfig: z.record(z.unknown()).optional(),
   telegramBotConfig: z.record(z.unknown()).optional(),
+  quickReplies: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        label: z.string().min(1).max(50),
+        text: z.string().min(1).max(500),
+      }),
+    )
+    .max(20)
+    .optional(),
   handoffRules: z
     .object({
       score_threshold: z.number().int().min(0).max(100),
@@ -186,6 +196,17 @@ export const campaignUpdateSchema = z.object({
 export const campaignFiltersSchema = z.object({
   status: z.enum(['draft', 'active', 'paused', 'completed']).optional(),
   type: z.enum(['launch', 'promotion', 'recurring', 'evergreen', 'other']).optional(),
+})
+
+// AI simulation
+export const simulateAiSchema = z.object({
+  message: z.string().min(1).max(2000),
+})
+
+// Send message
+export const sendMessageSchema = z.object({
+  content: z.string().min(1).max(5000),
+  senderAgentId: z.string().uuid(),
 })
 
 // Lead event filters

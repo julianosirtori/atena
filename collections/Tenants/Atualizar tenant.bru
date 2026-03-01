@@ -67,7 +67,16 @@ docs {
   | `whatsappConfig` | object | — |
   | `instagramConfig` | object | — |
   | `telegramBotConfig` | object | — |
+  | `quickReplies` | array | Max 20 items, ver abaixo |
   | `handoffRules` | object | Ver abaixo |
+
+  ### Estrutura de `quickReplies[]`
+
+  | Campo | Tipo | Validação |
+  |-------|------|-----------|
+  | `id` | string | UUID |
+  | `label` | string | 1–50 caracteres |
+  | `text` | string | 1–500 caracteres |
 
   ### Estrutura de `handoffRules`
 

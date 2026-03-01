@@ -14,6 +14,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { STAGE_CONFIG, CHANNEL_CONFIG } from '@/lib/constants'
 import { formatPhone, formatRelativeTime } from '@/lib/utils'
 import { LeadScoreGauge } from './lead-score-gauge'
+import { ScoreBreakdown } from './score-breakdown'
 import { LeadEventTimeline } from './lead-event-timeline'
 import type { LeadStage } from '@/types'
 
@@ -215,6 +216,7 @@ export default function LeadDetailPage() {
         <Card className="flex flex-col items-center justify-center">
           <LeadScoreGauge score={lead.score} />
           <p className="mt-1 text-xs text-warm-500">Temperatura</p>
+          {leadId && <ScoreBreakdown leadId={leadId} />}
         </Card>
       </div>
 

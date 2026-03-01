@@ -1,7 +1,8 @@
 import { FastifyPluginAsync } from 'fastify'
-import { db, messages } from '@atena/database'
-import { eq, and, lt, desc } from 'drizzle-orm'
-import { messageCursorSchema } from '../../../lib/schemas.js'
+import { db, messages, conversations } from '@atena/database'
+import { eq, and, lt, desc, sql } from 'drizzle-orm'
+import { messageCursorSchema, sendMessageSchema } from '../../../lib/schemas.js'
+import { ValidationError } from '../../../lib/errors.js'
 
 export const messagesRoutes: FastifyPluginAsync = async (server) => {
   // GET /tenants/:tenantId/conversations/:conversationId/messages
@@ -45,6 +46,52 @@ export const messagesRoutes: FastifyPluginAsync = async (server) => {
       const nextCursor = data.length === limit ? data[0]?.id : undefined
 
       return { data, meta: { nextCursor } }
+    },
+  )
+
+  // POST /tenants/:tenantId/conversations/:conversationId/messages
+  server.post<{
+    Params: { tenantId: string; conversationId: string }
+    Body: unknown
+  }>(
+    '/tenants/:tenantId/conversations/:conversationId/messages',
+    async (request) => {
+      const { tenantId, conversationId } = request.params
+      const parsed = sendMessageSchema.safeParse(request.body)
+      if (!parsed.success) {
+        throw new ValidationError(parsed.error.flatten().fieldErrors)
+      }
+
+      const { content, senderAgentId } = parsed.data
+
+      const [msg] = await db
+        .insert(messages)
+        .values({
+          tenantId,
+          conversationId,
+          direction: 'outbound',
+          senderType: 'agent',
+          senderAgentId,
+          content,
+          contentType: 'text',
+          deliveryStatus: 'sent',
+        })
+        .returning()
+
+      await db
+        .update(conversations)
+        .set({
+          humanMessagesCount: sql`${conversations.humanMessagesCount} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(conversations.id, conversationId),
+            eq(conversations.tenantId, tenantId),
+          ),
+        )
+
+      return { data: msg }
     },
   )
 }

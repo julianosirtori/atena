@@ -1,4 +1,4 @@
-import type { LeadStage, ConversationStatus, SenderType, Channel, EventType, CampaignStatus, CampaignType, Severity } from '@/types'
+import type { LeadStage, ConversationStatus, SenderType, Channel, EventType, CampaignStatus, CampaignType, Severity, Plan, BillingStatus, IncidentType } from '@/types'
 
 export const STAGE_CONFIG: Record<LeadStage, { label: string; color: string; bg: string }> = {
   new: { label: 'Novo', color: 'text-gray-700', bg: 'bg-gray-100' },
@@ -66,4 +66,38 @@ export const SEVERITY_CONFIG: Record<Severity, { label: string; color: string; b
   medium: { label: 'Média', color: 'text-amber-700', bg: 'bg-amber-100' },
   high: { label: 'Alta', color: 'text-orange-700', bg: 'bg-orange-100' },
   critical: { label: 'Crítica', color: 'text-red-700', bg: 'bg-red-100' },
+}
+
+export const PLAN_CONFIG: Record<Plan, { label: string; color: string; bg: string }> = {
+  starter: { label: 'Starter', color: 'text-gray-700', bg: 'bg-gray-100' },
+  pro: { label: 'Pro', color: 'text-blue-700', bg: 'bg-blue-100' },
+  scale: { label: 'Scale', color: 'text-violet-700', bg: 'bg-violet-100' },
+}
+
+export const BILLING_STATUS_CONFIG: Record<BillingStatus, { label: string; color: string; bg: string }> = {
+  trial: { label: 'Trial', color: 'text-amber-700', bg: 'bg-amber-100' },
+  active: { label: 'Ativo', color: 'text-emerald-700', bg: 'bg-emerald-100' },
+  past_due: { label: 'Inadimplente', color: 'text-red-700', bg: 'bg-red-100' },
+  cancelled: { label: 'Cancelado', color: 'text-gray-700', bg: 'bg-gray-100' },
+}
+
+export const INCIDENT_TYPE_LABEL: Record<IncidentType, string> = {
+  injection_attempt: 'Tentativa de injeção',
+  prompt_leak: 'Vazamento de prompt',
+  off_topic: 'Fora do tema',
+  over_promise: 'Promessa excessiva',
+  validation_failed: 'Falha na validação',
+  identity_leak: 'Vazamento de identidade',
+}
+
+export const DETECTION_LAYER_LABEL: Record<string, string> = {
+  sanitization: 'Sanitização',
+  prompt: 'Prompt',
+  validation: 'Validação',
+}
+
+export const ACTION_TAKEN_LABEL: Record<string, string> = {
+  blocked: 'Bloqueado',
+  handoff: 'Transferido',
+  generic_response: 'Resposta genérica',
 }

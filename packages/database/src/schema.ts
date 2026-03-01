@@ -32,6 +32,12 @@ export interface NotificationPreferences {
   sound: boolean
 }
 
+export interface QuickReply {
+  id: string
+  label: string
+  text: string
+}
+
 export interface UtmRule {
   utm_source?: string
   utm_medium?: string
@@ -240,6 +246,8 @@ export const tenants = pgTable(
         follow_up_enabled: false,
         follow_up_delay_hours: 24,
       }),
+
+    quickReplies: jsonb('quick_replies').$type<QuickReply[]>().default([]),
 
     stripeCustomerId: text('stripe_customer_id'),
     billingStatus: billingStatusEnum('billing_status')

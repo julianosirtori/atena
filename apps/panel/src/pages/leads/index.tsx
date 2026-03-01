@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { EmptyState } from '@/components/shared/empty-state'
+import { DemoBanner } from '@/components/shared/demo-banner'
+import { demoLeads, isDemoDismissed } from '@/lib/demo-data'
 import { LeadTable } from './lead-table'
 import { LeadKanban } from './lead-kanban'
 import { cn } from '@/lib/utils'
@@ -43,7 +45,10 @@ export default function LeadsPage() {
   }
 
   const { data, isLoading } = useLeads(filters)
-  const leads = data?.data ?? []
+  const [demoDismissed, setDemoDismissed] = useState(isDemoDismissed)
+  const realLeads = data?.data ?? []
+  const showDemo = !isLoading && realLeads.length === 0 && !demoDismissed
+  const leads = showDemo ? demoLeads : realLeads
   const meta = data?.meta
 
   function updateParam(key: string, value: string) {
@@ -109,6 +114,9 @@ export default function LeadsPage() {
           onChange={(e) => updateParam('channel', e.target.value)}
         />
       </div>
+
+      {/* Demo banner */}
+      {showDemo && <DemoBanner onDismiss={() => setDemoDismissed(true)} />}
 
       {/* Content */}
       {isLoading ? (
