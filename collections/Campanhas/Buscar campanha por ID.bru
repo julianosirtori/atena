@@ -1,0 +1,39 @@
+meta {
+  name: Buscar campanha por ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("campanha tem os campos esperados", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data).to.have.property("name");
+    expect(body.data).to.have.property("status");
+    expect(body.data).to.have.property("type");
+    expect(body.data).to.have.property("tenantId");
+  });
+}
+
+docs {
+  # Buscar campanha por ID
+
+  Retorna os detalhes completos de uma campanha.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+}

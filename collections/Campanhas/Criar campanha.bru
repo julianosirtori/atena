@@ -1,0 +1,79 @@
+meta {
+  name: Criar campanha
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Lançamento Curso Dor Crônica",
+    "description": "Campanha de lançamento do novo curso de manejo da dor crônica",
+    "type": "launch",
+    "startDate": "2026-03-15T00:00:00.000Z",
+    "endDate": "2026-04-15T00:00:00.000Z",
+    "autoActivate": true,
+    "productsInfo": "Curso Online: Manejo da Dor Crônica Baseado em Evidências\n- 40 horas de conteúdo\n- Certificado reconhecido\n- Acesso por 12 meses\n- Mentoria em grupo",
+    "pricingInfo": "Valor: R$ 997 à vista ou 12x de R$ 97\nEarly bird: R$ 797 (até 20/03)",
+    "customInstructions": "Foque em destacar o diferencial do curso: abordagem baseada em evidências e mentoria com a Dra. Milena. Se o lead perguntar sobre early bird, reforce a urgência da data limite.",
+    "utmRules": [
+      { "utm_source": "instagram", "utm_campaign": "curso-dor-2026" },
+      { "utm_source": "facebook", "utm_campaign": "curso-dor-2026" }
+    ],
+    "goalLeads": 200,
+    "goalConversions": 50
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.data) {
+    bru.setEnvVar("campaignId", body.data.id);
+  }
+}
+
+tests {
+  test("status code é 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+
+  test("campanha foi criada", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.name).to.equal("Lançamento Curso Dor Crônica");
+    expect(body.data.status).to.equal("draft");
+    expect(body.data.type).to.equal("launch");
+  });
+}
+
+docs {
+  # Criar campanha
+
+  Cria uma nova campanha em status `draft`. A campanha pode ser ativada manualmente ou automaticamente via `autoActivate` + `startDate`.
+
+  ## Body
+
+  | Campo | Tipo | Obrigatório | Descrição |
+  |-------|------|-------------|-----------|
+  | `name` | string | Sim | Nome da campanha (1–200 chars) |
+  | `description` | string | Não | Descrição detalhada |
+  | `type` | enum | Não | `launch`, `promotion`, `recurring`, `evergreen`, `other` |
+  | `startDate` | datetime | Não | Data de início (ISO 8601) |
+  | `endDate` | datetime | Não | Data de término |
+  | `autoActivate` | boolean | Não | Ativar automaticamente ao atingir startDate |
+  | `productsInfo` | string | Não | Override de produtos/serviços para esta campanha |
+  | `pricingInfo` | string | Não | Override de preços |
+  | `faq` | string | Não | FAQ específico da campanha |
+  | `customInstructions` | string | Não | Instruções adicionais para a IA nesta campanha |
+  | `fallbackMessage` | string | Não | Mensagem de fallback específica |
+  | `handoffRules` | object | Não | Override parcial das regras de handoff |
+  | `utmRules` | array | Não | Regras de matching por UTM |
+  | `isDefault` | boolean | Não | Campanha fallback (quando lead não tem UTM) |
+  | `goalLeads` | integer | Não | Meta de leads |
+  | `goalConversions` | integer | Não | Meta de conversões |
+}

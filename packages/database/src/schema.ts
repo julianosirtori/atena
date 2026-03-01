@@ -32,6 +32,12 @@ export interface NotificationPreferences {
   sound: boolean
 }
 
+export interface UtmRule {
+  utm_source?: string
+  utm_medium?: string
+  utm_campaign?: string
+}
+
 export interface AiMetadata {
   intent?: string
   confidence?: number
@@ -123,6 +129,10 @@ export const eventTypeEnum = pgEnum('event_type', [
   'converted',
   'lost',
   'reopened',
+  'campaign_joined',
+  'campaign_completed',
+  'pipeline_stage_moved',
+  'automation_triggered',
 ])
 
 export const messageTypeEnum = pgEnum('message_type', [
@@ -136,6 +146,27 @@ export const scheduledStatusEnum = pgEnum('scheduled_status', [
   'sent',
   'cancelled',
   'failed',
+])
+
+export const campaignStatusEnum = pgEnum('campaign_status', [
+  'draft',
+  'active',
+  'paused',
+  'completed',
+])
+
+export const campaignTypeEnum = pgEnum('campaign_type', [
+  'launch',
+  'promotion',
+  'recurring',
+  'evergreen',
+  'other',
+])
+
+export const campaignMatchMethodEnum = pgEnum('campaign_match_method', [
+  'utm',
+  'manual',
+  'default',
 ])
 
 export const incidentTypeEnum = pgEnum('incident_type', [
@@ -285,6 +316,8 @@ export const leads = pgTable(
     tags: text().array().default(sql`'{}'::text[]`),
 
     assignedTo: uuid('assigned_to').references(() => agents.id),
+    activeCampaignId: uuid('active_campaign_id'),
+    pipelineStageId: uuid('pipeline_stage_id'),
 
     lastCountedMonth: text('last_counted_month'),
 
@@ -336,6 +369,7 @@ export const conversations = pgTable(
     status: conversationStatusEnum().notNull().default('ai'),
 
     assignedAgentId: uuid('assigned_agent_id').references(() => agents.id),
+    campaignId: uuid('campaign_id'),
 
     aiMessagesCount: integer('ai_messages_count').default(0),
     humanMessagesCount: integer('human_messages_count').default(0),
@@ -543,6 +577,98 @@ export const securityIncidents = pgTable(
   ],
 )
 
+// 11. Campaigns
+export const campaigns = pgTable(
+  'campaigns',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+
+    name: text().notNull(),
+    description: text(),
+    type: campaignTypeEnum().notNull().default('other'),
+    status: campaignStatusEnum().notNull().default('draft'),
+
+    startDate: timestamp('start_date', { withTimezone: true }),
+    endDate: timestamp('end_date', { withTimezone: true }),
+    autoActivate: boolean('auto_activate').default(false),
+
+    productsInfo: text('products_info'),
+    pricingInfo: text('pricing_info'),
+    faq: text(),
+    customInstructions: text('custom_instructions'),
+    fallbackMessage: text('fallback_message'),
+
+    handoffRules: jsonb('handoff_rules').$type<Partial<HandoffRules>>(),
+    utmRules: jsonb('utm_rules').$type<UtmRule[]>().default([]),
+
+    isDefault: boolean('is_default').default(false),
+    goalLeads: integer('goal_leads'),
+    goalConversions: integer('goal_conversions'),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    index('idx_campaigns_tenant').on(t.tenantId),
+    index('idx_campaigns_status').on(t.tenantId, t.status),
+    index('idx_campaigns_default')
+      .on(t.tenantId, t.isDefault)
+      .where(sql`${t.isDefault} = true`),
+  ],
+)
+
+// 12. Lead Campaigns (junction table)
+export const leadCampaigns = pgTable(
+  'lead_campaigns',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    leadId: uuid('lead_id')
+      .notNull()
+      .references(() => leads.id, { onDelete: 'cascade' }),
+    campaignId: uuid('campaign_id')
+      .notNull()
+      .references(() => campaigns.id, { onDelete: 'cascade' }),
+
+    matchedBy: campaignMatchMethodEnum('matched_by').notNull(),
+    matchedAt: timestamp('matched_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('idx_lead_campaigns_unique').on(t.leadId, t.campaignId),
+    index('idx_lead_campaigns_campaign').on(t.campaignId),
+    index('idx_lead_campaigns_lead').on(t.leadId),
+  ],
+)
+
+// 13. Pipeline Stages
+export const pipelineStages = pgTable(
+  'pipeline_stages',
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+
+    name: text().notNull(),
+    position: integer().notNull().default(0),
+    color: text().default('#6B7280'),
+    isWon: boolean('is_won').default(false),
+    isLost: boolean('is_lost').default(false),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    index('idx_pipeline_stages_tenant').on(t.tenantId),
+    uniqueIndex('idx_pipeline_stages_position').on(t.tenantId, t.position),
+  ],
+)
+
 // ---------------------------------------------------------------------------
 // Relations
 // ---------------------------------------------------------------------------
@@ -557,6 +683,9 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   conversationNotes: many(conversationNotes),
   scheduledMessages: many(scheduledMessages),
   securityIncidents: many(securityIncidents),
+  campaigns: many(campaigns),
+  pipelineStages: many(pipelineStages),
+  leadCampaigns: many(leadCampaigns),
 }))
 
 export const agentsRelations = relations(agents, ({ one, many }) => ({
@@ -579,10 +708,19 @@ export const leadsRelations = relations(leads, ({ one, many }) => ({
     fields: [leads.assignedTo],
     references: [agents.id],
   }),
+  activeCampaign: one(campaigns, {
+    fields: [leads.activeCampaignId],
+    references: [campaigns.id],
+  }),
+  pipelineStage: one(pipelineStages, {
+    fields: [leads.pipelineStageId],
+    references: [pipelineStages.id],
+  }),
   conversations: many(conversations),
   leadEvents: many(leadEvents),
   scheduledMessages: many(scheduledMessages),
   securityIncidents: many(securityIncidents),
+  leadCampaigns: many(leadCampaigns),
 }))
 
 export const conversationsRelations = relations(
@@ -599,6 +737,10 @@ export const conversationsRelations = relations(
     assignedAgent: one(agents, {
       fields: [conversations.assignedAgentId],
       references: [agents.id],
+    }),
+    campaign: one(campaigns, {
+      fields: [conversations.campaignId],
+      references: [campaigns.id],
     }),
     messages: many(messages),
     notes: many(conversationNotes),
@@ -697,6 +839,42 @@ export const securityIncidentsRelations = relations(
     resolvedByAgent: one(agents, {
       fields: [securityIncidents.resolvedBy],
       references: [agents.id],
+    }),
+  }),
+)
+
+export const campaignsRelations = relations(campaigns, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [campaigns.tenantId],
+    references: [tenants.id],
+  }),
+  leadCampaigns: many(leadCampaigns),
+}))
+
+export const leadCampaignsRelations = relations(
+  leadCampaigns,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [leadCampaigns.tenantId],
+      references: [tenants.id],
+    }),
+    lead: one(leads, {
+      fields: [leadCampaigns.leadId],
+      references: [leads.id],
+    }),
+    campaign: one(campaigns, {
+      fields: [leadCampaigns.campaignId],
+      references: [campaigns.id],
+    }),
+  }),
+)
+
+export const pipelineStagesRelations = relations(
+  pipelineStages,
+  ({ one }) => ({
+    tenant: one(tenants, {
+      fields: [pipelineStages.tenantId],
+      references: [tenants.id],
     }),
   }),
 )

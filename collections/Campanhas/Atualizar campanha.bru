@@ -1,0 +1,44 @@
+meta {
+  name: Atualizar campanha
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Lançamento Curso Dor Crônica — Edição 2",
+    "goalLeads": 300,
+    "goalConversions": 80
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("campanha foi atualizada", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("id");
+    expect(body.data.name).to.contain("Edição 2");
+  });
+}
+
+docs {
+  # Atualizar campanha
+
+  Atualiza campos de uma campanha existente. Todos os campos são opcionais.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+}

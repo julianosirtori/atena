@@ -3,6 +3,7 @@ import { db, tenants, leads, conversations, messages } from '@atena/database'
 import type { InboundMessage } from '@atena/channels'
 import { getMessageQueue } from '../lib/queue.js'
 import { countLeadIfNew } from './billing.service.js'
+import { matchLeadToCampaign } from './campaign.service.js'
 
 export class WebhookError extends Error {
   statusCode: number
@@ -164,6 +165,28 @@ async function processInboundCommon(
     await countLeadIfNew(tenantId, lead.id)
   } catch {
     // Billing failure must not block message processing
+  }
+
+  // Match lead to campaign (never blocks message processing)
+  try {
+    const fullLead = await db
+      .select({
+        id: leads.id,
+        tenantId: leads.tenantId,
+        activeCampaignId: leads.activeCampaignId,
+        utmSource: leads.utmSource,
+        utmMedium: leads.utmMedium,
+        utmCampaign: leads.utmCampaign,
+      })
+      .from(leads)
+      .where(eq(leads.id, lead.id))
+      .limit(1)
+
+    if (fullLead[0]) {
+      await matchLeadToCampaign(fullLead[0])
+    }
+  } catch {
+    // Campaign matching failure must not block message processing
   }
 
   const conversation = await findOrCreateConversation(tenantId, lead.id, inbound.channel)

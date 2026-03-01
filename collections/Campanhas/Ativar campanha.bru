@@ -1,0 +1,35 @@
+meta {
+  name: Ativar campanha
+  type: http
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}/activate
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("campanha ficou ativa", function() {
+    const body = res.getBody();
+    expect(body.data.status).to.equal("active");
+  });
+}
+
+docs {
+  # Ativar campanha
+
+  Muda o status da campanha para `active`. Apenas campanhas `draft` ou `paused` podem ser ativadas.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+}

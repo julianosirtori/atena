@@ -12,11 +12,13 @@ export function createQueues() {
 
   const notificationQueue = new Queue(QUEUE_NAMES.SEND_NOTIFICATION, { connection })
   const scheduledQueue = new Queue(QUEUE_NAMES.SCHEDULED, { connection })
+  const campaignLifecycleQueue = new Queue(QUEUE_NAMES.CAMPAIGN_LIFECYCLE, { connection })
 
   // DLQ queues
   const processMessageDlq = new Queue(QUEUE_NAMES.PROCESS_MESSAGE_DLQ, { connection })
   const sendNotificationDlq = new Queue(QUEUE_NAMES.SEND_NOTIFICATION_DLQ, { connection })
   const scheduledDlq = new Queue(QUEUE_NAMES.SCHEDULED_DLQ, { connection })
+  const campaignLifecycleDlq = new Queue(QUEUE_NAMES.CAMPAIGN_LIFECYCLE_DLQ, { connection })
 
   // Wire queues into handoff service
   setQueues(notificationQueue, scheduledQueue)
@@ -24,9 +26,11 @@ export function createQueues() {
   return {
     notificationQueue,
     scheduledQueue,
+    campaignLifecycleQueue,
     processMessageDlq,
     sendNotificationDlq,
     scheduledDlq,
+    campaignLifecycleDlq,
   }
 }
 

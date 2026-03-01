@@ -128,6 +128,66 @@ export const securityIncidentResolveSchema = z.object({
   resolvedBy: z.string().uuid(),
 })
 
+// Campaign
+const utmRuleSchema = z.object({
+  utm_source: z.string().optional(),
+  utm_medium: z.string().optional(),
+  utm_campaign: z.string().optional(),
+})
+
+const campaignHandoffRulesSchema = z.object({
+  score_threshold: z.number().int().min(0).max(100).optional(),
+  max_ai_turns: z.number().int().min(1).max(50).optional(),
+  business_hours_only: z.boolean().optional(),
+  handoff_intents: z.array(z.string()).optional(),
+  auto_handoff_on_price: z.boolean().optional(),
+  follow_up_enabled: z.boolean().optional(),
+  follow_up_delay_hours: z.number().int().min(1).max(168).optional(),
+})
+
+export const campaignCreateSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  type: z.enum(['launch', 'promotion', 'recurring', 'evergreen', 'other']).default('other'),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  autoActivate: z.boolean().default(false),
+  productsInfo: z.string().optional(),
+  pricingInfo: z.string().optional(),
+  faq: z.string().optional(),
+  customInstructions: z.string().optional(),
+  fallbackMessage: z.string().optional(),
+  handoffRules: campaignHandoffRulesSchema.optional(),
+  utmRules: z.array(utmRuleSchema).default([]),
+  isDefault: z.boolean().default(false),
+  goalLeads: z.number().int().positive().optional(),
+  goalConversions: z.number().int().positive().optional(),
+})
+
+export const campaignUpdateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  description: z.string().max(2000).optional(),
+  type: z.enum(['launch', 'promotion', 'recurring', 'evergreen', 'other']).optional(),
+  startDate: z.string().datetime().nullable().optional(),
+  endDate: z.string().datetime().nullable().optional(),
+  autoActivate: z.boolean().optional(),
+  productsInfo: z.string().nullable().optional(),
+  pricingInfo: z.string().nullable().optional(),
+  faq: z.string().nullable().optional(),
+  customInstructions: z.string().nullable().optional(),
+  fallbackMessage: z.string().nullable().optional(),
+  handoffRules: campaignHandoffRulesSchema.nullable().optional(),
+  utmRules: z.array(utmRuleSchema).optional(),
+  isDefault: z.boolean().optional(),
+  goalLeads: z.number().int().positive().nullable().optional(),
+  goalConversions: z.number().int().positive().nullable().optional(),
+})
+
+export const campaignFiltersSchema = z.object({
+  status: z.enum(['draft', 'active', 'paused', 'completed']).optional(),
+  type: z.enum(['launch', 'promotion', 'recurring', 'evergreen', 'other']).optional(),
+})
+
 // Lead event filters
 export const leadEventFiltersSchema = z.object({
   eventType: z
@@ -143,6 +203,10 @@ export const leadEventFiltersSchema = z.object({
       'converted',
       'lost',
       'reopened',
+      'campaign_joined',
+      'campaign_completed',
+      'pipeline_stage_moved',
+      'automation_triggered',
     ])
     .optional(),
 })

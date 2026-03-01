@@ -1,0 +1,35 @@
+meta {
+  name: Completar campanha
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}/complete
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("campanha ficou completada", function() {
+    const body = res.getBody();
+    expect(body.data.status).to.equal("completed");
+  });
+}
+
+docs {
+  # Completar campanha
+
+  Muda o status da campanha para `completed`. Apenas campanhas `active` ou `paused` podem ser completadas.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+}

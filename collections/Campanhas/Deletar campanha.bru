@@ -1,0 +1,30 @@
+meta {
+  name: Deletar campanha
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+}
+
+docs {
+  # Deletar campanha
+
+  Remove uma campanha. Apenas campanhas em status `draft` podem ser deletadas. Campanhas ativas/pausadas/completadas retornam 409.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+}

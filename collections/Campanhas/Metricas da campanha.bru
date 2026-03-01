@@ -1,0 +1,63 @@
+meta {
+  name: Metricas da campanha
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}/metrics
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("métricas têm os campos esperados", function() {
+    const body = res.getBody();
+    expect(body.data).to.have.property("totalLeads");
+    expect(body.data).to.have.property("leadsByStage");
+    expect(body.data).to.have.property("avgScore");
+    expect(body.data).to.have.property("handoffRate");
+    expect(body.data).to.have.property("conversionRate");
+    expect(body.data).to.have.property("topIntents");
+  });
+}
+
+docs {
+  # Métricas da campanha
+
+  Retorna métricas agregadas de uma campanha específica.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+
+  ## Resposta (200)
+
+  ```json
+  {
+    "data": {
+      "totalLeads": 150,
+      "leadsByStage": {
+        "new": 30,
+        "qualifying": 60,
+        "hot": 40,
+        "converted": 20
+      },
+      "avgScore": 45,
+      "handoffRate": 15,
+      "conversionRate": 13,
+      "topIntents": [
+        { "intent": "buying", "count": 45 },
+        { "intent": "question", "count": 38 }
+      ]
+    }
+  }
+  ```
+}

@@ -1,11 +1,12 @@
 import { db } from '@atena/database'
-import { tenants, leads, conversations, messages } from '@atena/database'
+import { tenants, leads, conversations, messages, campaigns } from '@atena/database'
 import { eq, and, desc } from 'drizzle-orm'
 import { MockAdapter, ZApiAdapter, MetaWhatsAppAdapter } from '@atena/channels'
 import type { ChannelAdapter } from '@atena/channels'
 import { env } from '@atena/config'
 import type {
   TenantForPrompt,
+  CampaignForPrompt,
   LeadForPrompt,
   MessageForPrompt,
   HandoffDecision,
@@ -24,6 +25,7 @@ import {
 } from './security-incident.service.js'
 import { classifyAIError } from '../lib/ai-error.classifier.js'
 import { triggerHandoff } from './handoff.service.js'
+import { mergeCampaignConfig } from './campaign.merge.js'
 import type { AIService } from './ai.service.js'
 import { logger } from '../lib/logger.js'
 
@@ -78,6 +80,7 @@ function toTenantForPrompt(tenant: typeof tenants.$inferSelect): TenantForPrompt
     businessHours: tenant.businessHours,
     paymentMethods: tenant.paymentMethods,
     customInstructions: tenant.customInstructions,
+    fallbackMessage: tenant.fallbackMessage,
     handoffRules: tenant.handoffRules,
   }
 }
@@ -197,8 +200,41 @@ export async function processMessage(
   // 5. Check for explicit handoff before AI call
   const explicitHandoff = sanitizationResult.flags.includes('explicit_handoff')
 
-  // 6. Build prompts
-  const tenantForPrompt = toTenantForPrompt(tenant)
+  // 6. Build prompts (campaign-aware)
+  let tenantForPrompt = toTenantForPrompt(tenant)
+
+  // Load campaign config if lead has an active campaign
+  if (lead.activeCampaignId) {
+    const [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(and(eq(campaigns.id, lead.activeCampaignId), eq(campaigns.status, 'active')))
+      .limit(1)
+
+    if (campaign) {
+      const campaignForPrompt: CampaignForPrompt = {
+        name: campaign.name,
+        description: campaign.description,
+        productsInfo: campaign.productsInfo,
+        pricingInfo: campaign.pricingInfo,
+        faq: campaign.faq,
+        customInstructions: campaign.customInstructions,
+        fallbackMessage: campaign.fallbackMessage,
+        handoffRules: campaign.handoffRules,
+      }
+      tenantForPrompt = mergeCampaignConfig(tenantForPrompt, campaignForPrompt)
+      log.info({ campaignId: campaign.id, campaignName: campaign.name }, 'Campaign config merged')
+
+      // Update conversation with campaign reference
+      if (!conversation.campaignId) {
+        await db
+          .update(conversations)
+          .set({ campaignId: campaign.id })
+          .where(eq(conversations.id, conversation.id))
+      }
+    }
+  }
+
   const leadForPrompt = toLeadForPrompt(lead)
 
   // Load conversation history
@@ -244,7 +280,7 @@ export async function processMessage(
       'AI call failed, using fallback',
     )
 
-    const fallbackMsg = tenant.fallbackMessage ?? GENERIC_FALLBACK_MSG
+    const fallbackMsg = tenantForPrompt.fallbackMessage ?? GENERIC_FALLBACK_MSG
 
     await saveOutboundMessage(job, fallbackMsg, 'ai', {
       intent: 'other',

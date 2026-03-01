@@ -1,0 +1,65 @@
+meta {
+  name: Listar campanhas
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns?page=1&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  page: 1
+  limit: 20
+  ~status: active
+  ~type: launch
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.data && body.data.length > 0) {
+    bru.setEnvVar("campaignId", body.data[0].id);
+  }
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("data é um array", function() {
+    const body = res.getBody();
+    expect(body.data).to.be.an("array");
+  });
+
+  test("meta tem campos de paginação", function() {
+    const body = res.getBody();
+    expect(body.meta).to.have.property("total");
+    expect(body.meta).to.have.property("page");
+    expect(body.meta).to.have.property("limit");
+    expect(body.meta).to.have.property("totalPages");
+  });
+}
+
+docs {
+  # Listar campanhas
+
+  Lista campanhas do tenant com paginação e filtros opcionais.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+
+  ## Query params
+
+  | Param | Tipo | Default | Descrição |
+  |-------|------|---------|-----------|
+  | `page` | integer | `1` | Página |
+  | `limit` | integer | `20` | Itens por página (1–100) |
+  | `status` | enum | — | `draft`, `active`, `paused`, `completed` |
+  | `type` | enum | — | `launch`, `promotion`, `recurring`, `evergreen`, `other` |
+}

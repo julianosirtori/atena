@@ -1,5 +1,6 @@
 export type {
   TenantForPrompt,
+  CampaignForPrompt,
   LeadForPrompt,
   MessageForPrompt,
   ParsedAIResponse,

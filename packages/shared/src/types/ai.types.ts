@@ -7,6 +7,7 @@ export interface TenantForPrompt {
   businessHours: string | null
   paymentMethods: string | null
   customInstructions: string | null
+  fallbackMessage: string | null
   handoffRules: {
     score_threshold: number
     max_ai_turns: number
@@ -16,6 +17,17 @@ export interface TenantForPrompt {
     follow_up_enabled: boolean
     follow_up_delay_hours: number
   }
+}
+
+export interface CampaignForPrompt {
+  name: string
+  description: string | null
+  productsInfo: string | null
+  pricingInfo: string | null
+  faq: string | null
+  customInstructions: string | null
+  fallbackMessage: string | null
+  handoffRules: Partial<TenantForPrompt['handoffRules']> | null
 }
 
 export interface LeadForPrompt {

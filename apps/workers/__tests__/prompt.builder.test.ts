@@ -11,6 +11,7 @@ const baseTenant: TenantForPrompt = {
   businessHours: 'Seg-Sex 9h-18h',
   paymentMethods: 'PIX, cartão',
   customInstructions: 'Sempre oferecer frete grátis acima de R$299.',
+  fallbackMessage: null,
   handoffRules: {
     score_threshold: 60,
     max_ai_turns: 15,

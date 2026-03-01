@@ -1,0 +1,35 @@
+meta {
+  name: Pausar campanha
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/campaigns/{{campaignId}}/pause
+  body: none
+  auth: none
+}
+
+tests {
+  test("status code é 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+
+  test("campanha ficou pausada", function() {
+    const body = res.getBody();
+    expect(body.data.status).to.equal("paused");
+  });
+}
+
+docs {
+  # Pausar campanha
+
+  Muda o status da campanha para `paused`. Apenas campanhas `active` podem ser pausadas.
+
+  ## Path params
+
+  | Param | Tipo | Descrição |
+  |-------|------|-----------|
+  | `tenantId` | UUID | ID do tenant |
+  | `campaignId` | UUID | ID da campanha |
+}

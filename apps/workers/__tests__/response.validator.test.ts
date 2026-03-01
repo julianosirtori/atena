@@ -11,6 +11,7 @@ const baseTenant: TenantForPrompt = {
   businessHours: null,
   paymentMethods: null,
   customInstructions: null,
+  fallbackMessage: null,
   handoffRules: {
     score_threshold: 60,
     max_ai_turns: 15,
