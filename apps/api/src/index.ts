@@ -1,9 +1,15 @@
 import { env } from '@atena/config'
+import { ssePublisher } from '@atena/shared'
 import { closeQueues } from './lib/queue.js'
+import { sseManager } from './lib/sse-manager.js'
 
 async function main() {
   // Validate env early — will throw if invalid
   const port = env.PORT
+
+  // Initialize SSE infrastructure
+  await sseManager.init(env.REDIS_URL)
+  await ssePublisher.init(env.REDIS_URL)
 
   const { buildServer } = await import('./server.js')
   const server = await buildServer()
@@ -18,6 +24,8 @@ async function main() {
 
   const shutdown = async () => {
     server.log.info('Shutting down...')
+    await sseManager.shutdown()
+    await ssePublisher.shutdown()
     await closeQueues()
     await server.close()
     process.exit(0)

@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { db, messages, conversations } from '@atena/database'
 import { eq, and, lt, desc, sql } from 'drizzle-orm'
+import { ssePublisher } from '@atena/shared'
 import { messageCursorSchema, sendMessageSchema } from '../../../lib/schemas.js'
 import { ValidationError } from '../../../lib/errors.js'
 
@@ -90,6 +91,13 @@ export const messagesRoutes: FastifyPluginAsync = async (server) => {
             eq(conversations.tenantId, tenantId),
           ),
         )
+
+      // Publish SSE event for agent message
+      await ssePublisher.publish(tenantId, 'new_message', {
+        conversationId,
+        messageId: msg.id,
+        source: 'api',
+      })
 
       return { data: msg }
     },

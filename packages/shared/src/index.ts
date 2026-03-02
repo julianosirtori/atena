@@ -16,3 +16,6 @@ export type { RetryOptions } from './retry.js'
 
 export { CircuitBreaker, CircuitBreakerOpenError } from './circuit-breaker.js'
 export type { CircuitBreakerOptions } from './circuit-breaker.js'
+
+export type { SSEEventType, SSEEventData, SSEEvent } from './sse-events.js'
+export { SSEPublisher, ssePublisher } from './sse-publisher.js'

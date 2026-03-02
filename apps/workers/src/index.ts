@@ -1,10 +1,16 @@
 import { env } from '@atena/config'
+import { ssePublisher } from '@atena/shared'
 import { startMessageWorker, createQueues } from './worker.js'
 import { startScheduledWorker } from './workers/scheduled.worker.js'
 import { startNotificationWorker } from './workers/notification.worker.js'
 import { startCampaignLifecycleWorker } from './workers/campaign-lifecycle.worker.js'
 import { TelegramBotService } from './services/telegram/telegram.bot.js'
 import { logger } from './lib/logger.js'
+
+// Initialize SSE publisher for real-time events
+ssePublisher.init(env.REDIS_URL).catch((error) => {
+  logger.error({ error }, 'Failed to initialize SSE publisher')
+})
 
 // Create queues and wire them into the handoff service
 const {
@@ -64,6 +70,7 @@ async function shutdown() {
     scheduledDlq.close(),
     campaignLifecycleDlq.close(),
     telegramBot?.stop(),
+    ssePublisher.shutdown(),
   ])
   process.exit(0)
 }

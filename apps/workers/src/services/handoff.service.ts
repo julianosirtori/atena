@@ -3,6 +3,7 @@ import { conversations, leads, leadEvents, messages } from '@atena/database'
 import { eq, and } from 'drizzle-orm'
 import { Queue } from 'bullmq'
 import type { HandoffRules } from '@atena/database'
+import { ssePublisher } from '@atena/shared'
 import { logger } from '../lib/logger.js'
 
 type ConversationStatus = 'ai' | 'waiting_human' | 'human' | 'closed'
@@ -168,6 +169,16 @@ export async function triggerHandoff(params: TriggerHandoffParams): Promise<void
     })
   }
 
+  // Publish SSE events
+  await ssePublisher.publish(tenantId, 'handoff_triggered', {
+    conversationId,
+    handoffReason: reason,
+  })
+  await ssePublisher.publish(tenantId, 'conversation_updated', {
+    conversationId,
+    status: 'waiting_human',
+  })
+
   log.info({ reason }, 'Handoff triggered')
 }
 
@@ -224,6 +235,12 @@ export async function assignToAgent(
     toValue: agentId,
     createdBy: 'system',
     metadata: {},
+  })
+
+  // Publish SSE event
+  await ssePublisher.publish(tenantId, 'conversation_updated', {
+    conversationId,
+    status: 'human',
   })
 
   log.info('Agent assigned to conversation')
@@ -289,6 +306,12 @@ export async function returnToAI(
     metadata: {},
   })
 
+  // Publish SSE event
+  await ssePublisher.publish(tenantId, 'conversation_updated', {
+    conversationId,
+    status: 'ai',
+  })
+
   log.info('Conversation returned to AI')
 }
 
@@ -338,6 +361,12 @@ export async function closeConversation(
       })
       .where(eq(agents.id, conversation.assignedAgentId))
   }
+
+  // Publish SSE event
+  await ssePublisher.publish(tenantId, 'conversation_updated', {
+    conversationId,
+    status: 'closed',
+  })
 
   log.info('Conversation closed')
 }
@@ -403,6 +432,12 @@ export async function handleTimeout(
     toValue: 'ai',
     createdBy: 'system',
     metadata: { reason: 'timeout' },
+  })
+
+  // Publish SSE event
+  await ssePublisher.publish(tenantId, 'conversation_updated', {
+    conversationId,
+    status: 'ai',
   })
 
   log.info('Handoff timeout — reverted to AI')

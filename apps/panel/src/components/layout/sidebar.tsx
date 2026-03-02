@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { Inbox, Users, BarChart3, Settings, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TenantSelector } from './tenant-selector'
+import { useConversations } from '@/hooks/use-conversations'
 
 const links = [
   { to: '/inbox', label: 'Inbox', icon: Inbox },
@@ -12,6 +13,9 @@ const links = [
 ]
 
 export function Sidebar() {
+  const { data: waitingData } = useConversations({ status: 'waiting_human', limit: 1 })
+  const waitingCount = waitingData?.meta?.total ?? 0
+
   return (
     <aside className="hidden md:flex md:w-60 lg:w-64 flex-col border-r border-warm-200 bg-white">
       <div className="flex h-14 items-center gap-2 border-b border-warm-100 px-5">
@@ -36,7 +40,12 @@ export function Sidebar() {
             }
           >
             <link.icon size={20} />
-            {link.label}
+            <span className="flex-1">{link.label}</span>
+            {link.to === '/inbox' && waitingCount > 0 && (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                {waitingCount > 99 ? '99+' : waitingCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

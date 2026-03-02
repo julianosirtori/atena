@@ -1,0 +1,63 @@
+meta {
+  name: Conectar stream de eventos
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tenants/{{tenantId}}/events/stream
+  body: none
+  auth: none
+}
+
+docs {
+  # Stream de Eventos SSE
+
+  Abre uma conexão Server-Sent Events (SSE) para receber atualizações em tempo real do tenant.
+
+  **Nota:** Bruno não suporta SSE nativamente. Para testar, use:
+
+  ```bash
+  curl -N http://localhost:3000/api/v1/tenants/{tenantId}/events/stream
+  ```
+
+  ## Headers da resposta
+
+  | Header | Valor |
+  |--------|-------|
+  | `Content-Type` | `text/event-stream` |
+  | `Cache-Control` | `no-cache, no-transform` |
+  | `Connection` | `keep-alive` |
+
+  ## Tipos de eventos
+
+  | Evento | Descrição |
+  |--------|-----------|
+  | `connected` | Conexão estabelecida |
+  | `new_message` | Nova mensagem na conversa |
+  | `conversation_updated` | Status da conversa alterado |
+  | `lead_updated` | Score/stage do lead atualizado |
+  | `handoff_triggered` | Handoff para humano acionado |
+
+  ## Exemplo de evento
+
+  ```
+  event: new_message
+  data: {"type":"new_message","data":{"conversationId":"abc-123","messageId":"msg-456"},"timestamp":"2026-03-02T10:30:00.000Z"}
+  ```
+
+  ## Heartbeat
+
+  A cada 30 segundos o servidor envia um heartbeat para manter a conexão:
+
+  ```
+  : heartbeat
+  ```
+
+  ## Status codes
+
+  | Código | Descrição |
+  |--------|-----------|
+  | `200` | Stream aberto com sucesso |
+  | `404` | Tenant não encontrado |
+}

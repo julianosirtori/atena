@@ -2,11 +2,14 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { MobileNav } from './mobile-nav'
 import { OnboardingChecklist } from '@/components/shared/onboarding-checklist'
+import { SSEStatusIndicator } from '@/components/ui/sse-status-indicator'
 import { useTenantContext } from '@/contexts/tenant-context'
+import { useSSE } from '@/hooks/use-sse'
 import { Spinner } from '@/components/ui/spinner'
 
 export function RootLayout() {
   const { isLoading, tenantId } = useTenantContext()
+  const { status: sseStatus } = useSSE(tenantId)
 
   if (isLoading) {
     return (
@@ -35,6 +38,7 @@ export function RootLayout() {
       </main>
       <MobileNav />
       <OnboardingChecklist />
+      <SSEStatusIndicator status={sseStatus} />
     </div>
   )
 }

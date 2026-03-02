@@ -11,7 +11,7 @@ import type {
   MessageForPrompt,
   HandoffDecision,
 } from '@atena/shared'
-import { withRetry, CircuitBreakerOpenError } from '@atena/shared'
+import { withRetry, CircuitBreakerOpenError, ssePublisher } from '@atena/shared'
 import type { Queue } from 'bullmq'
 import { sanitizeInput } from './prompt.guard.js'
 import { buildSystemPrompt, buildUserPrompt } from './prompt.builder.js'
@@ -345,11 +345,17 @@ export async function processMessage(
   }
 
   // 10. Save outbound message
-  await saveOutboundMessage(job, responseToSend, 'ai', {
+  const outboundId = await saveOutboundMessage(job, responseToSend, 'ai', {
     intent: parsed.intent,
     confidence: parsed.confidence,
     tokens_used: tokensUsed,
     extracted_info: parsed.extractedInfo,
+  })
+
+  // Publish SSE event for new AI response
+  await ssePublisher.publish(job.tenantId, 'new_message', {
+    conversationId: job.conversationId,
+    messageId: outboundId,
   })
 
   // 11. Send message via channel adapter BEFORE handoff (spec: AI always responds first)
@@ -423,6 +429,14 @@ export async function processMessage(
     },
     'Score updated',
   )
+
+  // Publish SSE event for lead score/stage update
+  if (scoreResult.stageChanged) {
+    await ssePublisher.publish(job.tenantId, 'lead_updated', {
+      leadId: job.leadId,
+      status: scoreResult.newStage,
+    })
+  }
 
   // 13. Evaluate handoff — skip if conversation is already in waiting_human
   const alreadyWaitingHuman = conversation.status === 'waiting_human'
@@ -548,16 +562,20 @@ async function saveOutboundMessage(
   content: string,
   senderType: 'ai' | 'system',
   aiMetadata: Record<string, unknown>,
-): Promise<void> {
-  await db.insert(messages).values({
-    tenantId: job.tenantId,
-    conversationId: job.conversationId,
-    direction: 'outbound',
-    senderType,
-    content,
-    contentType: 'text',
-    aiMetadata,
-    deliveryStatus: 'queued',
-    correlationId: job.correlationId,
-  })
+): Promise<string | undefined> {
+  const [msg] = await db
+    .insert(messages)
+    .values({
+      tenantId: job.tenantId,
+      conversationId: job.conversationId,
+      direction: 'outbound',
+      senderType,
+      content,
+      contentType: 'text',
+      aiMetadata,
+      deliveryStatus: 'queued',
+      correlationId: job.correlationId,
+    })
+    .returning({ id: messages.id })
+  return msg?.id
 }

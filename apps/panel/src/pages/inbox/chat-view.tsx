@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { ArrowLeft, PanelRightOpen, PanelRightClose, WifiOff } from 'lucide-react'
+import { ArrowLeft, PanelRightOpen, PanelRightClose, WifiOff, ChevronDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMessages, useSendMessage } from '@/hooks/use-conversations'
+import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom'
 import { useTenantContext } from '@/contexts/tenant-context'
 import { useAgents } from '@/hooks/use-agents'
 import { useChannelStatus } from '@/hooks/use-tenant'
@@ -34,6 +35,8 @@ export function ChatView({ conversation, className, showSidebar, onToggleSidebar
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const topSentinelRef = useRef<HTMLDivElement>(null)
+  const prevMessageCountRef = useRef(0)
+  const { newMessageCount, onNewMessage, scrollToBottom, updatePosition } = useScrollToBottom(scrollRef)
 
   const firstAgent = agentsData?.data?.[0]
   const canSend = conversation.status === 'human' || conversation.status === 'waiting_human'
@@ -52,14 +55,23 @@ export function ChatView({ conversation, className, showSidebar, onToggleSidebar
     }
   }, [isLoading, conversation.id])
 
+  // Detect new messages (from SSE-triggered refetches)
+  useEffect(() => {
+    if (allMessages.length > prevMessageCountRef.current && prevMessageCountRef.current > 0) {
+      onNewMessage()
+    }
+    prevMessageCountRef.current = allMessages.length
+  }, [allMessages.length, onNewMessage])
+
   // Infinite scroll up to load older messages
   const handleScroll = useCallback(() => {
+    updatePosition()
     const el = scrollRef.current
     if (!el || !hasNextPage || isFetchingNextPage) return
     if (el.scrollTop < 100) {
       fetchNextPage()
     }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, updatePosition])
 
   const statusCfg = STATUS_CONFIG[conversation.status]
 
@@ -113,6 +125,19 @@ export function ChatView({ conversation, className, showSidebar, onToggleSidebar
           allMessages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
         )}
       </div>
+
+      {/* New messages badge */}
+      {newMessageCount > 0 && (
+        <div className="flex justify-center">
+          <button
+            onClick={scrollToBottom}
+            className="flex items-center gap-1.5 rounded-full bg-amber-600 px-3 py-1.5 text-xs font-medium text-white shadow-md transition-colors hover:bg-amber-700"
+          >
+            <ChevronDown size={14} />
+            {newMessageCount} nova{newMessageCount > 1 ? 's' : ''} mensagen{newMessageCount > 1 ? 's' : 'm'}
+          </button>
+        </div>
+      )}
 
       {/* Channel offline banner */}
       {canSend && whatsappOffline && (

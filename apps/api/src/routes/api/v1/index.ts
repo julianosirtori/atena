@@ -11,6 +11,7 @@ import { billingRoutes } from './billing.js'
 import { dashboardRoutes } from './dashboard.js'
 import { adminRoutes } from './admin.js'
 import { campaignsRoutes } from './campaigns.js'
+import { sseRoutes } from './sse.js'
 
 export const v1Routes: FastifyPluginAsync = async (server) => {
   await server.register(tenantsRoutes)
@@ -25,4 +26,5 @@ export const v1Routes: FastifyPluginAsync = async (server) => {
   await server.register(dashboardRoutes)
   await server.register(adminRoutes)
   await server.register(campaignsRoutes)
+  await server.register(sseRoutes)
 }

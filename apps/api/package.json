@@ -15,10 +15,12 @@
     "@atena/channels": "*",
     "@atena/config": "*",
     "@atena/database": "*",
+    "@atena/shared": "*",
     "@fastify/cors": "^10.0.0",
     "@fastify/rate-limit": "^10.0.0",
     "bullmq": "^5.0.0",
     "fastify": "^5.0.0",
+    "ioredis": "^5.4.0",
     "pino": "^9.0.0",
     "pino-pretty": "^13.0.0",
     "zod": "3.24.4"
